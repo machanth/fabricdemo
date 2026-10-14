@@ -361,6 +361,35 @@ def test_generated_fixture_upload_paths_are_deterministic():
     ]
 
 
+def test_onelake_directory_creation_skips_artifact_and_files_roots():
+    created = []
+
+    class Directory:
+        def __init__(self, path):
+            self.path = path
+
+        def create_directory(self):
+            created.append(self.path)
+
+    file_system = SimpleNamespace(
+        get_directory_client=lambda path: Directory(path)
+    )
+
+    fabric_deploy.ensure_onelake_directory(
+        file_system,
+        "lakehouse-id/Files/landing/property-assessment/sql",
+    )
+
+    assert created == [
+        "lakehouse-id/Files/landing",
+        "lakehouse-id/Files/landing/property-assessment",
+        "lakehouse-id/Files/landing/property-assessment/sql",
+    ]
+    assert "" not in created
+    assert "lakehouse-id" not in created
+    assert "lakehouse-id/Files" not in created
+
+
 def test_verify_gold_tables_accepts_default_schema_paths(monkeypatch):
     class Directory:
         def __init__(self, path):

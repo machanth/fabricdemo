@@ -14,7 +14,7 @@ For the deterministic lab path, deploy the Lakehouse and Notebook, then run:
 python .\scripts\prepare_gold.py
 ```
 
-The command uses the process credential with the official OneLake DFS endpoint, workspace ID as the filesystem, and owned Lakehouse ID as the item path. It overwrites deterministic files under `Files/landing/property-assessment/{sql,cosmos,adls}`, then binds/runs the notebook and verifies Gold. No storage key, SAS, token, endpoint ID, or secret is logged or persisted.
+The command uses the process credential with the official OneLake DFS endpoint, workspace ID as the filesystem, and owned Lakehouse ID as the item path. It treats the workspace filesystem root, Lakehouse artifact root, and managed `Files` root as platform-owned; it creates only `Files/landing/...` descendants. It overwrites deterministic files under `Files/landing/property-assessment/{sql,cosmos,adls}`, then binds/runs the notebook and verifies Gold. No storage key, SAS, token, endpoint ID, or secret is logged or persisted.
 
 For the Azure-source extension, create managed connections for Azure SQL, Cosmos DB, and ADLS Gen2 using organizational identity or an approved connection. Use mirroring where your capacity/region supports it. Otherwise create pipelines to land SQL/Cosmos extracts and an ADLS Gen2 shortcut to `assessment-data/appeals`. Shortcut definitions are deliberately not committed because their schema and connection/target values are environment-specific.
 

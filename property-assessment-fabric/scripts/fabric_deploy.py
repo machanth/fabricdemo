@@ -291,9 +291,14 @@ def onelake_file_system(workspace_id: str):
 
 
 def ensure_onelake_directory(file_system, path: str) -> None:
-    current = ""
-    for segment in path.split("/"):
-        current = f"{current}/{segment}".strip("/")
+    segments = [segment for segment in path.split("/") if segment]
+    if len(segments) < 3 or segments[1] != "Files":
+        raise RuntimeError(
+            "OneLake writable directory paths must begin with {lakehouseId}/Files/<descendant>."
+        )
+    current = "/".join(segments[:2])
+    for segment in segments[2:]:
+        current = f"{current}/{segment}"
         try:
             file_system.get_directory_client(current).create_directory()
         except ResourceExistsError:
