@@ -16,7 +16,22 @@ function Test-Command {
 }
 
 Test-Command python "Install Python 3.10 or later."
-Test-Command az "Install Azure CLI."
+$hasAzureCli = $null -ne (Get-Command az -ErrorAction SilentlyContinue)
+$clientCredentialNames = @("AZURE_TENANT_ID", "AZURE_CLIENT_ID", "AZURE_CLIENT_SECRET")
+$configuredClientCredentials = @(
+    $clientCredentialNames | Where-Object {
+        -not [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_, "Process"))
+    }
+)
+if ($configuredClientCredentials.Count -gt 0 -and $configuredClientCredentials.Count -lt $clientCredentialNames.Count) {
+    $missing = @(
+        $clientCredentialNames | Where-Object {
+            [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_, "Process"))
+        }
+    )
+    throw "Incomplete Fabric client credentials. Missing process environment variables: $($missing -join ', ')"
+}
+$hasClientCredentials = $configuredClientCredentials.Count -eq $clientCredentialNames.Count
 
 $version = & python -c "import sys; print('.'.join(map(str, sys.version_info[:3])))"
 if ([version]$version -lt [version]"3.10") {
@@ -30,30 +45,27 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host "[ok] Python dependencies"
 
-if ($RequireAzure -or $RequireFabricAccess) {
+if ($RequireAzure) {
+    if (-not $hasAzureCli) {
+        throw "Azure source provisioning requires Azure CLI. Install 'az' or run only Fabric deployment with client credentials."
+    }
     & az account show --output none
     if ($LASTEXITCODE -ne 0) {
-        throw "Azure CLI authentication is required. Run 'az login' or use workload identity/service principal login in CI."
+        throw "Azure CLI authentication is required for Azure source provisioning."
     }
     Write-Host "[ok] Azure CLI session"
 }
 
 if ($RequireFabricAccess) {
-    $workspaceId = (Get-Content "$root\config\lab.json" -Raw | ConvertFrom-Json).workspace.id
-    $token = & az account get-access-token --resource https://api.fabric.microsoft.com --query accessToken -o tsv
-    if ($LASTEXITCODE -ne 0 -or -not $token) {
-        throw "Unable to acquire a Fabric API token from the current Azure CLI session."
+    if (-not $hasAzureCli -and -not $hasClientCredentials) {
+        throw "Fabric access requires either an authenticated Azure CLI or complete process environment variables AZURE_TENANT_ID, AZURE_CLIENT_ID, and AZURE_CLIENT_SECRET."
     }
-    try {
-        $response = Invoke-RestMethod `
-            -Uri "https://api.fabric.microsoft.com/v1/workspaces/$workspaceId" `
-            -Headers @{ Authorization = "Bearer $token" } `
-            -Method Get
-        Write-Host "[ok] Fabric workspace access: $($response.displayName) ($workspaceId)"
+    & python "$root\scripts\fabric_deploy.py" --check-access
+    if ($LASTEXITCODE -ne 0) {
+        throw "Fabric workspace access check failed."
     }
-    catch {
-        throw "Fabric workspace access failed for ${workspaceId}: $($_.Exception.Message)"
-    }
+    $mode = if ($hasClientCredentials) { "OAuth client credentials" } else { "Azure CLI" }
+    Write-Host "[ok] Fabric workspace access using $mode"
 }
 
 Write-Host "Preflight passed."

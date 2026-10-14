@@ -49,7 +49,7 @@ python .\scripts\validate_lab.py
 python -m pytest .\tests -q
 ```
 
-Pass only when preflight, validation, and tests succeed. Copy `.env.example` to an untracked `.env` only if your shell tooling uses it. Authentication is `AzureCliCredential` first and `DefaultAzureCredential` second; no secret is required in source control.
+Pass only when preflight, validation, and tests succeed. Copy `.env.example` to an untracked `.env` only if your shell tooling uses it. Fabric authentication uses complete process-scoped OAuth client credentials first, Azure CLI second, and noninteractive `DefaultAzureCredential` last. Partial client-credential configuration is rejected. Never write the real client secret to `.env`, shell history, logs, source files, or ownership state.
 
 ## Numbered lab
 
@@ -93,9 +93,25 @@ python .\scripts\fabric_deploy.py --include-preview
 
 Use `az login --service-principal` or workload identity in CI. Initial Azure SQL creation in this sample intentionally requires an Entra user administrator; production automation should precreate the server with an Entra group administrator and grant the service principal database roles.
 
+### Noninteractive Fabric deployment without Azure CLI
+
+Set the three values as **process environment variables through your secret manager or parent process**. Do not paste the secret into a committed script or save it in `.env`.
+
+```powershell
+$env:FABRIC_WORKSPACE_ID = "930bbe6f-b256-46b7-a70e-f3dcab99d2c9"
+# AZURE_TENANT_ID, AZURE_CLIENT_ID, and AZURE_CLIENT_SECRET must already be
+# injected into this process by the caller.
+.\scripts\preflight.ps1 -RequireFabricAccess
+python .\scripts\fabric_deploy.py
+python .\scripts\fabric_deploy.py --verify
+Remove-Item Env:AZURE_CLIENT_SECRET -ErrorAction SilentlyContinue
+```
+
+The service principal must be allowed to use Fabric APIs in tenant settings and have Contributor or Admin access to `MaddysWS`. The workspace must already be assigned to an eligible Fabric capacity. Source-specific values are still required after item creation: Lakehouse landing path `Files/landing/property-assessment`, Lakehouse/SQL endpoint binding for the semantic model, and environment-specific semantic model/ontology item IDs for Data Agents. Azure SQL, Cosmos DB, and ADLS provisioning remains an Azure CLI workflow.
+
 ## Troubleshooting quick map
 
-- `401/403` from Fabric: confirm `az account get-access-token --resource https://api.fabric.microsoft.com`, workspace role, tenant API switch, and capacity.
+- `401/403` from Fabric: confirm the service principal tenant setting and workspace role, or confirm `az account get-access-token --resource https://api.fabric.microsoft.com`; also verify capacity assignment.
 - Item collision: rename the existing item or explicitly reconcile `.state/owned-items.json`; never adopt by name automatically.
 - Notebook cannot find Files: attach the Lakehouse and upload/copy generated folders to `Files/landing/property-assessment`.
 - Direct Lake error: replace the semantic model expression placeholder by connecting the model to the deployed Lakehouse SQL analytics endpoint.

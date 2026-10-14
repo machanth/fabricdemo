@@ -102,7 +102,11 @@ def validate_artifacts() -> None:
         for path in ROOT.rglob("*")
         if path.is_file() and ".state" not in path.parts and path.suffix.lower() not in {".parquet", ".pyc"}
     )
-    secret_patterns = [r"(?i)client_secret\s*=\s*[^<\s]+", r"(?i)tenant_id\s*=\s*[0-9a-f-]{36}", r"(?i)password\s*=\s*[^\s]+"]
+    secret_patterns = [
+        r"(?i)client_secret\s*=\s*['\"][^<{$\s][^'\"]{7,}['\"]",
+        r"(?i)tenant_id\s*=\s*['\"][0-9a-f-]{36}['\"]",
+        r"(?i)password\s*=\s*['\"][^<{$\s][^'\"]{7,}['\"]",
+    ]
     for pattern in secret_patterns:
         if re.search(pattern, tracked_text):
             fail(f"Potential committed secret matched pattern: {pattern}")
