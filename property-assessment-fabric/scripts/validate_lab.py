@@ -84,6 +84,18 @@ def validate_artifacts() -> None:
     unsupported_shortcuts = ROOT / "fabric" / "Property Assessment.Lakehouse" / "shortcuts.metadata.json"
     if unsupported_shortcuts.exists():
         fail("Lakehouse shortcuts.metadata.json must not be committed; create environment-specific shortcuts after Lakehouse deployment.")
+    notebook_path = ROOT / "fabric" / "Property Assessment Bronze Silver Gold.Notebook" / "notebook-content.py"
+    notebook_bytes = notebook_path.read_bytes()
+    expected_prologue = b"# Fabric notebook source\n\n# METADATA ********************\n"
+    if not notebook_bytes.startswith(expected_prologue):
+        fail("Fabric notebook source must begin with the exact Git-source prologue and LF line endings.")
+    if b"\r\n" in notebook_bytes:
+        fail("Fabric notebook source must use LF line endings.")
+    notebook_text = notebook_bytes.decode("utf-8")
+    if notebook_text.count("# CELL ********************") != 6:
+        fail("Fabric notebook source must contain exactly six serialized cells.")
+    if notebook_text.count("# METADATA ********************") != 7:
+        fail("Fabric notebook source must contain notebook metadata plus metadata for all six cells.")
     for path in ROOT.rglob("*.json"):
         json.loads(path.read_text(encoding="utf-8"))
     for path in ROOT.rglob("*.tmdl"):

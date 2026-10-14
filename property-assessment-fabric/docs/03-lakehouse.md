@@ -4,6 +4,8 @@
 
 The notebook writes five Bronze tables, four Silver tables, and five Gold tables. It adds source/audit hashes, types columns, removes duplicates, validates `parcelId`, checks assessment arithmetic, and leaves nullable `aiSentiment`, `aiSummary`, `aiTheme`, and `aiUrgencyScore` columns for enrichment.
 
+The committed `notebook-content.py` is Fabric Git source, not a conventional standalone Python script: it must retain the exact `# Fabric notebook source` first line, LF line endings, notebook-level metadata, `# CELL ********************` separators, and per-cell language metadata.
+
 **Explore:** force one unknown `parcelId` in a copy and observe the assertion; compare Bronze nested profiles to Silver flattened business fields; identify skew by neighborhood.
 
 **Checkpoint/evidence:** `dim_property`, `dim_date`, `fact_assessment`, `fact_sale`, and `fact_appeal` are Delta tables; every assertion passes.

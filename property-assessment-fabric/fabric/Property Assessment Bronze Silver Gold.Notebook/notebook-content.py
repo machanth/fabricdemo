@@ -1,17 +1,46 @@
-# Fabric notebook source. Attach the "PropertyAssessmentLakehouse" Lakehouse before running.
+# Fabric notebook source
+
+# METADATA ********************
+
+# META {
+# META   "kernel_info": {
+# META     "name": "synapse_pyspark"
+# META   },
+# META   "dependencies": {}
+# META }
+
+# CELL ********************
+
+# Attach the "PropertyAssessmentLakehouse" Lakehouse before running.
 # PARAMETERS
 source_root = "Files/landing/property-assessment"
 appeals_path = f"{source_root}/adls/assessment_appeals.parquet"
 profiles_path = f"{source_root}/cosmos/property_profiles.json"
 sql_root = f"{source_root}/sql"
 
-# CELL ------------------------------------------------------------------------
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
 from pyspark.sql import functions as F
 from pyspark.sql.types import BooleanType, DoubleType, IntegerType, StringType, StructField, StructType
 
 spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", "true")
 
-# CELL ------------------------------------------------------------------------
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
 # Bronze: preserve source shape and add ingestion metadata.
 def with_audit(df, source_name):
     return (df.withColumn("_source", F.lit(source_name))
@@ -33,7 +62,15 @@ for name, frame in {
 }.items():
     frame.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable(name)
 
-# CELL ------------------------------------------------------------------------
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
 # Silver: typed, de-duplicated, quality-checked records.
 def assert_no_nulls(df, column, label):
     failures = df.filter(F.col(column).isNull()).count()
@@ -80,7 +117,15 @@ assert arithmetic_failures == 0, f"assessment arithmetic failures: {arithmetic_f
 for name, frame in {"silver_parcel": silver_parcel, "silver_assessment": silver_assessment, "silver_sale": silver_sale, "silver_appeal": silver_appeal}.items():
     frame.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable(name)
 
-# CELL ------------------------------------------------------------------------
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
 # Gold: dimensional outputs. AI columns are intentionally nullable and enrichment-ready.
 dim_property = silver_parcel.withColumn("propertyKey", F.xxhash64("parcelId"))
 dim_date = (spark.range(0, 1096)
@@ -103,9 +148,24 @@ fact_appeal = (silver_appeal.join(dim_property.select("parcelId", "propertyKey")
 for name, frame in {"dim_property": dim_property, "dim_date": dim_date, "fact_assessment": fact_assessment, "fact_sale": fact_sale, "fact_appeal": fact_appeal}.items():
     frame.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable(name)
 
-# CELL ------------------------------------------------------------------------
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
 # Explore:
 # 1. Which neighborhoods have the widest assessment-to-sale ratio spread?
 # 2. Do appeal reasons correlate with condition, class, or confidence score?
 # 3. Which nullable AI enrichment columns would most improve triage?
 display(fact_assessment.groupBy("taxYear").agg(F.count("*").alias("assessments"), F.round(F.avg("assessedValue"), 2).alias("avgAssessedValue")))
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }

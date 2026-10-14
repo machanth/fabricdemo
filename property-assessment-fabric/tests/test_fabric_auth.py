@@ -207,3 +207,17 @@ def test_reconcile_marks_terminal_failed_operation(monkeypatch, tmp_path):
 
     assert state["operations"][0]["status"] == "Failed"
     assert "ended as Failed" in state["operations"][0]["error"]
+
+
+def test_notebook_uses_exact_fabric_git_source_prologue():
+    notebook = (
+        ROOT
+        / "fabric"
+        / "Property Assessment Bronze Silver Gold.Notebook"
+        / "notebook-content.py"
+    ).read_bytes()
+
+    assert notebook.startswith(
+        b"# Fabric notebook source\n\n# METADATA ********************\n"
+    )
+    assert b"\r\n" not in notebook
