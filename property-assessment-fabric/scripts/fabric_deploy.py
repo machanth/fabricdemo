@@ -141,6 +141,9 @@ class Fabric:
     def get_item(self, item_id: str) -> dict:
         return self.request("GET", f"/workspaces/{self.workspace_id}/items/{item_id}").json()
 
+    def get_lakehouse(self, item_id: str) -> dict:
+        return self.request("GET", f"/workspaces/{self.workspace_id}/lakehouses/{item_id}").json()
+
     def create(self, item: dict, definition: dict | None, on_accepted=None) -> dict:
         body = {"displayName": item["displayName"], "type": item["type"], "description": MANAGED_DESCRIPTION}
         if definition:
@@ -164,7 +167,7 @@ class Fabric:
         self.request("POST", f"/workspaces/{self.workspace_id}/items/{item_id}/updateDefinition", json={"definition": definition})
 
 
-def definition_for(folder: Path) -> dict | None:
+def definition_for(folder: Path, replacements: dict[str, str] | None = None) -> dict | None:
     if not folder.exists():
         return None
     parts = []
@@ -172,8 +175,51 @@ def definition_for(folder: Path) -> dict | None:
         if not path.is_file() or path.name in TEXT_EXCLUDES:
             continue
         relative = path.relative_to(folder).as_posix()
-        parts.append({"path": relative, "payload": base64.b64encode(path.read_bytes()).decode("ascii"), "payloadType": "InlineBase64"})
+        content = path.read_bytes()
+        if replacements and path.suffix.lower() in {".tmdl", ".json", ".pbism", ".pbir"}:
+            text = content.decode("utf-8")
+            for placeholder, value in replacements.items():
+                text = text.replace(placeholder, value)
+            unresolved = sorted(set(re.findall(r"<FABRIC_[A-Z0-9_]+>", text)))
+            if unresolved:
+                raise RuntimeError(
+                    f"Unresolved deployment placeholders in {relative}: {', '.join(unresolved)}"
+                )
+            content = text.encode("utf-8")
+        parts.append({"path": relative, "payload": base64.b64encode(content).decode("ascii"), "payloadType": "InlineBase64"})
     return {"parts": parts} if parts else None
+
+
+def extract_direct_lake_binding(lakehouse: dict) -> dict[str, str]:
+    sql_endpoint = lakehouse.get("properties", {}).get("sqlEndpointProperties", {})
+    status = sql_endpoint.get("provisioningStatus")
+    if status and status.lower() not in {"success", "succeeded", "ready"}:
+        raise RuntimeError(f"Lakehouse SQL endpoint is not ready; provisioningStatus={status}")
+    server = sql_endpoint.get("connectionString")
+    database = sql_endpoint.get("id")
+    if not server or not database:
+        raise RuntimeError("Lakehouse response did not include SQL endpoint connectionString and id.")
+    if any(character in server + database for character in {'"', "\r", "\n"}):
+        raise RuntimeError("Lakehouse SQL endpoint properties contain unsafe characters.")
+    return {
+        "<FABRIC_SQL_ENDPOINT>": server,
+        "<FABRIC_SQL_DATABASE>": database,
+    }
+
+
+def direct_lake_replacements(client: Fabric, state: dict, item: dict) -> dict[str, str] | None:
+    source_display_name = item.get("directLakeSourceDisplayName")
+    if not source_display_name:
+        return None
+    matches = [
+        owned for owned in state["items"]
+        if owned["displayName"] == source_display_name and owned["type"] == "Lakehouse"
+    ]
+    if len(matches) != 1:
+        raise RuntimeError(
+            f"Direct Lake source {source_display_name} must be recorded exactly once before deploying {item['displayName']}."
+        )
+    return extract_direct_lake_binding(client.get_lakehouse(matches[0]["id"]))
 
 
 def persist_state(state_path: Path, state: dict) -> None:
@@ -368,7 +414,8 @@ def main() -> None:
             raise RuntimeError(
                 f"An indeterminate accepted operation exists for {key}. Run --discover and wait for reconciliation before retrying create."
             )
-        definition = definition_for(ROOT / item["source"])
+        replacements = direct_lake_replacements(client, state, item)
+        definition = definition_for(ROOT / item["source"], replacements=replacements)
         if owned:
             if definition and item["type"] != "Warehouse":
                 client.update_definition(owned["id"], definition)

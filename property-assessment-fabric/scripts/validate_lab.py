@@ -145,6 +145,20 @@ def validate_artifacts() -> None:
             fail(f"Role declaration does not match file name: {role_path.name}")
         if not re.search(r"tablePermission\s+DimProperty\s*=\s*DimProperty\[PropertyClassCode\]", content):
             fail(f"Role filter must use a qualified DimProperty column: {role_path.name}")
+    expressions = (semantic_definition / "expressions.tmdl").read_text(encoding="utf-8")
+    expected_sql_source = 'Sql.Database("<FABRIC_SQL_ENDPOINT>", "<FABRIC_SQL_DATABASE>")'
+    if expected_sql_source not in expressions or "Lakehouse.Contents" in expressions:
+        fail("Direct Lake expression must use staged Sql.Database endpoint/database placeholders.")
+    for annotation in (
+        "annotation PBI_NavigationStepName = Navigation",
+        "annotation PBI_ResultType = Table",
+    ):
+        if annotation not in expressions:
+            fail(f"Direct Lake expression is missing required metadata: {annotation}")
+    for table_path in (semantic_definition / "tables").glob("*.tmdl"):
+        content = table_path.read_text(encoding="utf-8")
+        if "mode: directLake" not in content or "expressionSource: PropertyAssessmentLakehouse" not in content:
+            fail(f"Direct Lake partition is not bound to the shared expression: {table_path.name}")
     report_definition = json.loads((ROOT / "fabric" / "Property Assessment Overview.Report" / "definition.pbir").read_text(encoding="utf-8"))
     if report_definition.get("version") != "4.0" or "datasetReference" not in report_definition:
         fail("PBIR definition is missing version 4.0 or datasetReference.")
@@ -161,6 +175,9 @@ def validate_artifacts() -> None:
     config = json.loads((ROOT / "config" / "lab.json").read_text(encoding="utf-8"))
     if config["workspace"]["id"] != "930bbe6f-b256-46b7-a70e-f3dcab99d2c9":
         fail("Target workspace ID changed unexpectedly.")
+    semantic_items = [item for item in config["items"] if item["type"] == "SemanticModel"]
+    if len(semantic_items) != 1 or semantic_items[0].get("directLakeSourceDisplayName") != "PropertyAssessmentLakehouse":
+        fail("Semantic model must resolve its Direct Lake binding from the owned Lakehouse.")
     display_names = [item["displayName"] for item in config["items"]]
     if len(display_names) != len(set(display_names)):
         fail("Fabric item display names must be unique.")

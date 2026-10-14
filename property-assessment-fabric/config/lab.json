@@ -39,6 +39,7 @@
       "displayName": "PropertyAssessmentModel",
       "type": "SemanticModel",
       "source": "fabric/Property Assessment Model.SemanticModel",
+      "directLakeSourceDisplayName": "PropertyAssessmentLakehouse",
       "automation": "rest-definition"
     },
     {

@@ -1,8 +1,9 @@
 expression PropertyAssessmentLakehouse = ```
 	let
-	    Source = Lakehouse.Contents(null)
+	    Source = Sql.Database("<FABRIC_SQL_ENDPOINT>", "<FABRIC_SQL_DATABASE>")
 	in
 	    Source
 	```
 	lineageTag: 65d78444-7082-47be-b01d-a6f3857c5a69
-
+	annotation PBI_NavigationStepName = Navigation
+	annotation PBI_ResultType = Table

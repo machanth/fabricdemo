@@ -1,3 +1,4 @@
+import base64
 import json
 import sys
 from pathlib import Path
@@ -272,3 +273,41 @@ def test_tmdl_descriptions_use_documentation_comments():
     assert "description:" not in content
     assert "/// Fictional parcel and neighborhood attributes" in content
     assert "/// Sum of fictional certified assessed values." in content
+
+
+def test_extract_direct_lake_binding_from_lakehouse_properties():
+    lakehouse = {
+        "properties": {
+            "sqlEndpointProperties": {
+                "connectionString": "example.datawarehouse.fabric.microsoft.com",
+                "id": "11111111-2222-3333-4444-555555555555",
+                "provisioningStatus": "Success",
+            }
+        }
+    }
+
+    assert fabric_deploy.extract_direct_lake_binding(lakehouse) == {
+        "<FABRIC_SQL_ENDPOINT>": "example.datawarehouse.fabric.microsoft.com",
+        "<FABRIC_SQL_DATABASE>": "11111111-2222-3333-4444-555555555555",
+    }
+
+
+def test_semantic_definition_stages_live_direct_lake_values_in_memory():
+    folder = ROOT / "fabric" / "Property Assessment Model.SemanticModel"
+    replacements = {
+        "<FABRIC_SQL_ENDPOINT>": "example.datawarehouse.fabric.microsoft.com",
+        "<FABRIC_SQL_DATABASE>": "11111111-2222-3333-4444-555555555555",
+    }
+
+    definition = fabric_deploy.definition_for(folder, replacements=replacements)
+    expressions_part = next(
+        part for part in definition["parts"]
+        if part["path"] == "definition/expressions.tmdl"
+    )
+    staged = base64.b64decode(expressions_part["payload"]).decode("utf-8")
+    committed = (folder / "definition" / "expressions.tmdl").read_text(encoding="utf-8")
+
+    assert 'Sql.Database("example.datawarehouse.fabric.microsoft.com", "11111111-2222-3333-4444-555555555555")' in staged
+    assert "<FABRIC_SQL_" not in staged
+    assert "<FABRIC_SQL_ENDPOINT>" in committed
+    assert "<FABRIC_SQL_DATABASE>" in committed
