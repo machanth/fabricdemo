@@ -1,0 +1,36 @@
+table DimProperty
+	description: Fictional parcel and neighborhood attributes used for assessment analysis.
+
+	column PropertyKey
+		dataType: int64
+		isHidden
+		sourceColumn: PropertyKey
+
+	column ParcelId
+		dataType: string
+		sourceColumn: ParcelId
+
+	column NeighborhoodName
+		dataType: string
+		sourceColumn: NeighborhoodName
+
+	column MarketArea
+		dataType: string
+		sourceColumn: MarketArea
+
+	column PropertyClassCode
+		dataType: string
+		sourceColumn: PropertyClassCode
+
+	column SyntheticAddress
+		dataType: string
+		description: Fabricated address for demonstration only.
+		sourceColumn: SyntheticAddress
+
+	partition DimProperty = entity
+		mode: directLake
+		source
+			entityName: dim_property
+			schemaName: dbo
+			expressionSource: PropertyAssessmentLakehouse
+

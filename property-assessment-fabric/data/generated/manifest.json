@@ -1,0 +1,14 @@
+{
+  "synthetic": true,
+  "seed": 20261013,
+  "scale": 240,
+  "counts": {
+    "parcels": 240,
+    "buildings": 240,
+    "assessments": 480,
+    "sales": 80,
+    "property_profiles": 240,
+    "appeals": 300
+  },
+  "warning": "All records are fictional and unsuitable for real valuation or taxation."
+}

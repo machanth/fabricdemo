@@ -1,0 +1,12 @@
+entityType Assessment
+	description: A fictional certified valuation for a parcel and tax year.
+	keyProperty: assessmentId
+	property assessmentId
+		dataType: string
+	property taxYear
+		dataType: int64
+	property assessedValue
+		dataType: double
+	property confidenceScore
+		dataType: double
+

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fictional Sudsberry property assessment dataset contract",
+  "synthetic": true,
+  "businessKey": "parcelId",
+  "scaleRules": {
+    "parcels": "scale",
+    "buildings": "scale",
+    "assessments": "scale * taxYearCount",
+    "sales": "floor(scale / 3)",
+    "propertyProfiles": "scale",
+    "appeals": "scale + floor(scale / 4)"
+  },
+  "datasets": {
+    "sql.parcels": {
+      "format": "csv",
+      "requiredColumns": ["parcelId", "neighborhoodId", "propertyClassCode", "syntheticAddress", "latitude", "longitude", "isSynthetic"]
+    },
+    "sql.assessments": {
+      "format": "csv",
+      "requiredColumns": ["assessmentId", "parcelId", "taxYear", "landValue", "improvementValue", "assessedValue", "confidenceScore"]
+    },
+    "sql.sales": {
+      "format": "csv",
+      "requiredColumns": ["saleId", "parcelId", "saleDate", "salePrice", "isArmsLength"]
+    },
+    "cosmos.propertyProfiles": {
+      "format": "json-array",
+      "partitionKey": "/neighborhoodId",
+      "requiredProperties": ["id", "parcelId", "neighborhoodId", "location", "site", "building", "currentAssessment", "inspections", "synthetic"]
+    },
+    "adls.appeals": {
+      "formats": ["json", "parquet"],
+      "requiredProperties": ["appealId", "parcelId", "taxYear", "submittedDate", "reasonCode", "narrative", "status", "groundTruthSentiment", "synthetic"]
+    }
+  },
+  "qualityRules": [
+    "Every parcelId referenced by assessments, sales, property profiles, and appeals exists in parcels.",
+    "Every record is marked synthetic and contains no owner name, email, phone number, or real address.",
+    "Assessment values equal landValue plus improvementValue.",
+    "Resolved appeals have an outcome and resolvedDate; open appeals have neither.",
+    "JSON and Parquet appeal row counts and appealId sets are identical."
+  ]
+}
+

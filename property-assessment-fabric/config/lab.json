@@ -1,0 +1,69 @@
+{
+  "solution": "property-assessment-fabric",
+  "workspace": {
+    "displayName": "MaddysWS",
+    "id": "930bbe6f-b256-46b7-a70e-f3dcab99d2c9"
+  },
+  "defaults": {
+    "scale": 240,
+    "seed": 20261013,
+    "taxYears": [2025, 2026],
+    "currencyCode": "CAD",
+    "countryCode": "CA",
+    "regionCode": "ON"
+  },
+  "ownership": {
+    "tag": "property-assessment-fabric",
+    "stateFile": ".state/owned-items.json"
+  },
+  "items": [
+    {
+      "displayName": "Property Assessment",
+      "type": "Lakehouse",
+      "source": "fabric/Property Assessment.Lakehouse",
+      "automation": "rest-definition"
+    },
+    {
+      "displayName": "Property Assessment Bronze Silver Gold",
+      "type": "Notebook",
+      "source": "fabric/Property Assessment Bronze Silver Gold.Notebook",
+      "automation": "rest-definition"
+    },
+    {
+      "displayName": "Property Assessment Warehouse",
+      "type": "Warehouse",
+      "source": "fabric/Property Assessment.Warehouse",
+      "automation": "create-then-sql"
+    },
+    {
+      "displayName": "Property Assessment Model",
+      "type": "SemanticModel",
+      "source": "fabric/Property Assessment Model.SemanticModel",
+      "automation": "rest-definition"
+    },
+    {
+      "displayName": "Property Assessment Overview",
+      "type": "Report",
+      "source": "fabric/Property Assessment Overview.Report",
+      "automation": "manual-pbir-after-binding"
+    },
+    {
+      "displayName": "Property Assessment Ontology",
+      "type": "Ontology",
+      "source": "fabric/Property Assessment Ontology.Ontology",
+      "automation": "rest-definition-preview"
+    },
+    {
+      "displayName": "Assessment Semantic Agent",
+      "type": "DataAgent",
+      "source": "fabric/Assessment Semantic Agent.DataAgent",
+      "automation": "rest-definition-preview"
+    },
+    {
+      "displayName": "Assessment Ontology Agent",
+      "type": "DataAgent",
+      "source": "fabric/Assessment Ontology Agent.DataAgent",
+      "automation": "rest-definition-preview"
+    }
+  ]
+}

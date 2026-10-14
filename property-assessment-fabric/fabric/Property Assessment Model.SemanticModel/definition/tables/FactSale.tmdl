@@ -1,0 +1,34 @@
+table FactSale
+	measure 'Total Sale Value' = SUM(FactSale[SalePrice])
+		formatString: $#,0
+
+	measure 'Arms Length Sales' = CALCULATE(COUNTROWS(FactSale), FactSale[IsArmsLength] = TRUE())
+		formatString: #,0
+
+	column PropertyKey
+		dataType: int64
+		isHidden
+		sourceColumn: propertyKey
+
+	column SaleDateKey
+		dataType: int64
+		isHidden
+		sourceColumn: saleDateKey
+
+	column SalePrice
+		dataType: double
+		isHidden
+		sourceColumn: salePrice
+
+	column IsArmsLength
+		dataType: boolean
+		isHidden
+		sourceColumn: isArmsLength
+
+	partition FactSale = entity
+		mode: directLake
+		source
+			entityName: fact_sale
+			schemaName: dbo
+			expressionSource: PropertyAssessmentLakehouse
+

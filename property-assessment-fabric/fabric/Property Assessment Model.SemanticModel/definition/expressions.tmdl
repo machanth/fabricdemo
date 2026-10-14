@@ -1,0 +1,8 @@
+expression PropertyAssessmentLakehouse = ```
+	let
+	    Source = Lakehouse.Contents(null)
+	in
+	    Source
+	```
+	lineageTag: 65d78444-7082-47be-b01d-a6f3857c5a69
+

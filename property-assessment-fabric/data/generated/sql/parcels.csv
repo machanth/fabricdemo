@@ -1,0 +1,241 @@
+parcelId,parcelNumber,neighborhoodId,neighborhoodName,marketArea,propertyClassCode,syntheticAddress,latitude,longitude,lotAreaSquareMetres,zoningCode,isSynthetic
+SUD-00001,99-0001-0001,LAKE,Lake Junction,Waterfront,RES,101 Boreal Avenue,46.4331,-81.06,429,R-1,True
+SUD-00002,99-0001-0002,PINE,Pine Crossing,Suburban,RES,102 Copper Lane,46.4362,-81.06,438,R-1,True
+SUD-00003,99-0001-0003,COPPER,Copper Works,Mixed Use,RES,103 Granite Drive,46.4393,-81.06,447,R-1,True
+SUD-00004,99-0001-0004,VALLEY,Valley East,Rural,RES,104 Juniper Road,46.4424,-81.06,456,R-1,True
+SUD-00005,99-0001-0005,CENTRAL,Central Sudsberry,Urban Core,RES,105 Northern Light Avenue,46.4455,-81.06,465,R-1,True
+SUD-00006,99-0001-0006,NORTH,North Ridge,Urban,RES,106 Pinecone Lane,46.4486,-81.06,474,R-1,True
+SUD-00007,99-0001-0007,LAKE,Lake Junction,Waterfront,MUR,107 Silver Birch Drive,46.4517,-81.06,483,RM-2,True
+SUD-00008,99-0001-0008,PINE,Pine Crossing,Suburban,RES,108 Aurora Road,46.4548,-81.06,492,R-1,True
+SUD-00009,99-0001-0009,COPPER,Copper Works,Mixed Use,RES,109 Boreal Avenue,46.4579,-81.06,501,R-1,True
+SUD-00010,99-0001-0010,VALLEY,Valley East,Rural,RES,110 Copper Lane,46.461,-81.06,510,R-1,True
+SUD-00011,99-0001-0011,CENTRAL,Central Sudsberry,Urban Core,COM,111 Granite Drive,46.4641,-81.06,1087,C-2,True
+SUD-00012,99-0001-0012,NORTH,North Ridge,Urban,RES,112 Juniper Road,46.4672,-81.06,528,R-1,True
+SUD-00013,99-0001-0013,LAKE,Lake Junction,Waterfront,RES,113 Northern Light Avenue,46.4703,-81.06,537,R-1,True
+SUD-00014,99-0001-0014,PINE,Pine Crossing,Suburban,MUR,114 Pinecone Lane,46.4734,-81.06,546,RM-2,True
+SUD-00015,99-0001-0015,COPPER,Copper Works,Mixed Use,RES,115 Silver Birch Drive,46.4765,-81.06,555,R-1,True
+SUD-00016,99-0001-0016,VALLEY,Valley East,Rural,RES,116 Aurora Road,46.4796,-81.06,564,R-1,True
+SUD-00017,99-0001-0017,CENTRAL,Central Sudsberry,Urban Core,AGR,117 Boreal Avenue,46.4827,-81.06,13411,AG-1,True
+SUD-00018,99-0001-0018,NORTH,North Ridge,Urban,RES,118 Copper Lane,46.4858,-81.06,582,R-1,True
+SUD-00019,99-0001-0019,LAKE,Lake Junction,Waterfront,RES,119 Granite Drive,46.4889,-81.06,591,R-1,True
+SUD-00020,99-0001-0020,PINE,Pine Crossing,Suburban,RES,120 Juniper Road,46.43,-81.06,600,R-1,True
+SUD-00021,99-0002-0021,COPPER,Copper Works,Mixed Use,MUR,121 Northern Light Avenue,46.4331,-81.0558,609,RM-2,True
+SUD-00022,99-0002-0022,VALLEY,Valley East,Rural,COM,122 Pinecone Lane,46.4362,-81.0558,1274,C-2,True
+SUD-00023,99-0002-0023,CENTRAL,Central Sudsberry,Urban Core,RES,123 Silver Birch Drive,46.4393,-81.0558,627,R-1,True
+SUD-00024,99-0002-0024,NORTH,North Ridge,Urban,RES,124 Aurora Road,46.4424,-81.0558,636,R-1,True
+SUD-00025,99-0002-0025,LAKE,Lake Junction,Waterfront,RES,125 Boreal Avenue,46.4455,-81.0558,645,R-1,True
+SUD-00026,99-0002-0026,PINE,Pine Crossing,Suburban,RES,126 Copper Lane,46.4486,-81.0558,654,R-1,True
+SUD-00027,99-0002-0027,COPPER,Copper Works,Mixed Use,RES,127 Granite Drive,46.4517,-81.0558,663,R-1,True
+SUD-00028,99-0002-0028,VALLEY,Valley East,Rural,MUR,128 Juniper Road,46.4548,-81.0558,672,RM-2,True
+SUD-00029,99-0002-0029,CENTRAL,Central Sudsberry,Urban Core,RES,129 Northern Light Avenue,46.4579,-81.0558,681,R-1,True
+SUD-00030,99-0002-0030,NORTH,North Ridge,Urban,RES,130 Pinecone Lane,46.461,-81.0558,690,R-1,True
+SUD-00031,99-0002-0031,LAKE,Lake Junction,Waterfront,RES,131 Silver Birch Drive,46.4641,-81.0558,699,R-1,True
+SUD-00032,99-0002-0032,PINE,Pine Crossing,Suburban,RES,132 Aurora Road,46.4672,-81.0558,708,R-1,True
+SUD-00033,99-0002-0033,COPPER,Copper Works,Mixed Use,COM,133 Boreal Avenue,46.4703,-81.0558,1461,C-2,True
+SUD-00034,99-0002-0034,VALLEY,Valley East,Rural,AGR,134 Copper Lane,46.4734,-81.0558,14822,AG-1,True
+SUD-00035,99-0002-0035,CENTRAL,Central Sudsberry,Urban Core,MUR,135 Granite Drive,46.4765,-81.0558,735,RM-2,True
+SUD-00036,99-0002-0036,NORTH,North Ridge,Urban,RES,136 Juniper Road,46.4796,-81.0558,744,R-1,True
+SUD-00037,99-0002-0037,LAKE,Lake Junction,Waterfront,RES,137 Northern Light Avenue,46.4827,-81.0558,753,R-1,True
+SUD-00038,99-0002-0038,PINE,Pine Crossing,Suburban,RES,138 Pinecone Lane,46.4858,-81.0558,762,R-1,True
+SUD-00039,99-0002-0039,COPPER,Copper Works,Mixed Use,RES,139 Silver Birch Drive,46.4889,-81.0558,771,R-1,True
+SUD-00040,99-0002-0040,VALLEY,Valley East,Rural,RES,140 Aurora Road,46.43,-81.0558,780,R-1,True
+SUD-00041,99-0003-0041,CENTRAL,Central Sudsberry,Urban Core,RES,141 Boreal Avenue,46.4331,-81.0516,789,R-1,True
+SUD-00042,99-0003-0042,NORTH,North Ridge,Urban,MUR,142 Copper Lane,46.4362,-81.0516,798,RM-2,True
+SUD-00043,99-0003-0043,LAKE,Lake Junction,Waterfront,RES,143 Granite Drive,46.4393,-81.0516,807,R-1,True
+SUD-00044,99-0003-0044,PINE,Pine Crossing,Suburban,COM,144 Juniper Road,46.4424,-81.0516,1648,C-2,True
+SUD-00045,99-0003-0045,COPPER,Copper Works,Mixed Use,RES,145 Northern Light Avenue,46.4455,-81.0516,825,R-1,True
+SUD-00046,99-0003-0046,VALLEY,Valley East,Rural,RES,146 Pinecone Lane,46.4486,-81.0516,834,R-1,True
+SUD-00047,99-0003-0047,CENTRAL,Central Sudsberry,Urban Core,RES,147 Silver Birch Drive,46.4517,-81.0516,843,R-1,True
+SUD-00048,99-0003-0048,NORTH,North Ridge,Urban,RES,148 Aurora Road,46.4548,-81.0516,852,R-1,True
+SUD-00049,99-0003-0049,LAKE,Lake Junction,Waterfront,MUR,149 Boreal Avenue,46.4579,-81.0516,861,RM-2,True
+SUD-00050,99-0003-0050,PINE,Pine Crossing,Suburban,RES,150 Copper Lane,46.461,-81.0516,870,R-1,True
+SUD-00051,99-0003-0051,COPPER,Copper Works,Mixed Use,AGR,151 Granite Drive,46.4641,-81.0516,16233,AG-1,True
+SUD-00052,99-0003-0052,VALLEY,Valley East,Rural,RES,152 Juniper Road,46.4672,-81.0516,888,R-1,True
+SUD-00053,99-0003-0053,CENTRAL,Central Sudsberry,Urban Core,RES,153 Northern Light Avenue,46.4703,-81.0516,897,R-1,True
+SUD-00054,99-0003-0054,NORTH,North Ridge,Urban,RES,154 Pinecone Lane,46.4734,-81.0516,906,R-1,True
+SUD-00055,99-0003-0055,LAKE,Lake Junction,Waterfront,COM,155 Silver Birch Drive,46.4765,-81.0516,1835,C-2,True
+SUD-00056,99-0003-0056,PINE,Pine Crossing,Suburban,MUR,156 Aurora Road,46.4796,-81.0516,924,RM-2,True
+SUD-00057,99-0003-0057,COPPER,Copper Works,Mixed Use,RES,157 Boreal Avenue,46.4827,-81.0516,933,R-1,True
+SUD-00058,99-0003-0058,VALLEY,Valley East,Rural,RES,158 Copper Lane,46.4858,-81.0516,942,R-1,True
+SUD-00059,99-0003-0059,CENTRAL,Central Sudsberry,Urban Core,RES,159 Granite Drive,46.4889,-81.0516,951,R-1,True
+SUD-00060,99-0003-0060,NORTH,North Ridge,Urban,RES,160 Juniper Road,46.43,-81.0516,960,R-1,True
+SUD-00061,99-0004-0061,LAKE,Lake Junction,Waterfront,RES,161 Northern Light Avenue,46.4331,-81.0474,969,R-1,True
+SUD-00062,99-0004-0062,PINE,Pine Crossing,Suburban,RES,162 Pinecone Lane,46.4362,-81.0474,978,R-1,True
+SUD-00063,99-0004-0063,COPPER,Copper Works,Mixed Use,MUR,163 Silver Birch Drive,46.4393,-81.0474,987,RM-2,True
+SUD-00064,99-0004-0064,VALLEY,Valley East,Rural,RES,164 Aurora Road,46.4424,-81.0474,996,R-1,True
+SUD-00065,99-0004-0065,CENTRAL,Central Sudsberry,Urban Core,RES,165 Boreal Avenue,46.4455,-81.0474,1005,R-1,True
+SUD-00066,99-0004-0066,NORTH,North Ridge,Urban,COM,166 Copper Lane,46.4486,-81.0474,2022,C-2,True
+SUD-00067,99-0004-0067,LAKE,Lake Junction,Waterfront,RES,167 Granite Drive,46.4517,-81.0474,1023,R-1,True
+SUD-00068,99-0004-0068,PINE,Pine Crossing,Suburban,AGR,168 Juniper Road,46.4548,-81.0474,17644,AG-1,True
+SUD-00069,99-0004-0069,COPPER,Copper Works,Mixed Use,RES,169 Northern Light Avenue,46.4579,-81.0474,1041,R-1,True
+SUD-00070,99-0004-0070,VALLEY,Valley East,Rural,MUR,170 Pinecone Lane,46.461,-81.0474,1050,RM-2,True
+SUD-00071,99-0004-0071,CENTRAL,Central Sudsberry,Urban Core,RES,171 Silver Birch Drive,46.4641,-81.0474,1059,R-1,True
+SUD-00072,99-0004-0072,NORTH,North Ridge,Urban,RES,172 Aurora Road,46.4672,-81.0474,1068,R-1,True
+SUD-00073,99-0004-0073,LAKE,Lake Junction,Waterfront,RES,173 Boreal Avenue,46.4703,-81.0474,1077,R-1,True
+SUD-00074,99-0004-0074,PINE,Pine Crossing,Suburban,RES,174 Copper Lane,46.4734,-81.0474,1086,R-1,True
+SUD-00075,99-0004-0075,COPPER,Copper Works,Mixed Use,RES,175 Granite Drive,46.4765,-81.0474,1095,R-1,True
+SUD-00076,99-0004-0076,VALLEY,Valley East,Rural,RES,176 Juniper Road,46.4796,-81.0474,1104,R-1,True
+SUD-00077,99-0004-0077,CENTRAL,Central Sudsberry,Urban Core,COM,177 Northern Light Avenue,46.4827,-81.0474,2209,C-2,True
+SUD-00078,99-0004-0078,NORTH,North Ridge,Urban,RES,178 Pinecone Lane,46.4858,-81.0474,1122,R-1,True
+SUD-00079,99-0004-0079,LAKE,Lake Junction,Waterfront,RES,179 Silver Birch Drive,46.4889,-81.0474,1131,R-1,True
+SUD-00080,99-0004-0080,PINE,Pine Crossing,Suburban,RES,180 Aurora Road,46.43,-81.0474,1140,R-1,True
+SUD-00081,99-0005-0081,COPPER,Copper Works,Mixed Use,RES,181 Boreal Avenue,46.4331,-81.0432,1149,R-1,True
+SUD-00082,99-0005-0082,VALLEY,Valley East,Rural,RES,182 Copper Lane,46.4362,-81.0432,1158,R-1,True
+SUD-00083,99-0005-0083,CENTRAL,Central Sudsberry,Urban Core,RES,183 Granite Drive,46.4393,-81.0432,1167,R-1,True
+SUD-00084,99-0005-0084,NORTH,North Ridge,Urban,MUR,184 Juniper Road,46.4424,-81.0432,1176,RM-2,True
+SUD-00085,99-0005-0085,LAKE,Lake Junction,Waterfront,AGR,185 Northern Light Avenue,46.4455,-81.0432,19055,AG-1,True
+SUD-00086,99-0005-0086,PINE,Pine Crossing,Suburban,RES,186 Pinecone Lane,46.4486,-81.0432,1194,R-1,True
+SUD-00087,99-0005-0087,COPPER,Copper Works,Mixed Use,RES,187 Silver Birch Drive,46.4517,-81.0432,1203,R-1,True
+SUD-00088,99-0005-0088,VALLEY,Valley East,Rural,COM,188 Aurora Road,46.4548,-81.0432,2396,C-2,True
+SUD-00089,99-0005-0089,CENTRAL,Central Sudsberry,Urban Core,RES,189 Boreal Avenue,46.4579,-81.0432,1221,R-1,True
+SUD-00090,99-0005-0090,NORTH,North Ridge,Urban,RES,190 Copper Lane,46.461,-81.0432,1230,R-1,True
+SUD-00091,99-0005-0091,LAKE,Lake Junction,Waterfront,MUR,191 Granite Drive,46.4641,-81.0432,1239,RM-2,True
+SUD-00092,99-0005-0092,PINE,Pine Crossing,Suburban,RES,192 Juniper Road,46.4672,-81.0432,1248,R-1,True
+SUD-00093,99-0005-0093,COPPER,Copper Works,Mixed Use,RES,193 Northern Light Avenue,46.4703,-81.0432,1257,R-1,True
+SUD-00094,99-0005-0094,VALLEY,Valley East,Rural,RES,194 Pinecone Lane,46.4734,-81.0432,1266,R-1,True
+SUD-00095,99-0005-0095,CENTRAL,Central Sudsberry,Urban Core,RES,195 Silver Birch Drive,46.4765,-81.0432,1275,R-1,True
+SUD-00096,99-0005-0096,NORTH,North Ridge,Urban,RES,196 Aurora Road,46.4796,-81.0432,1284,R-1,True
+SUD-00097,99-0005-0097,LAKE,Lake Junction,Waterfront,RES,197 Boreal Avenue,46.4827,-81.0432,1293,R-1,True
+SUD-00098,99-0005-0098,PINE,Pine Crossing,Suburban,MUR,198 Copper Lane,46.4858,-81.0432,1302,RM-2,True
+SUD-00099,99-0005-0099,COPPER,Copper Works,Mixed Use,COM,199 Granite Drive,46.4889,-81.0432,2583,C-2,True
+SUD-00100,99-0005-0100,VALLEY,Valley East,Rural,RES,200 Juniper Road,46.43,-81.0432,1320,R-1,True
+SUD-00101,99-0006-0101,CENTRAL,Central Sudsberry,Urban Core,RES,201 Northern Light Avenue,46.4331,-81.039,1329,R-1,True
+SUD-00102,99-0006-0102,NORTH,North Ridge,Urban,AGR,202 Pinecone Lane,46.4362,-81.039,20466,AG-1,True
+SUD-00103,99-0006-0103,LAKE,Lake Junction,Waterfront,RES,203 Silver Birch Drive,46.4393,-81.039,1347,R-1,True
+SUD-00104,99-0006-0104,PINE,Pine Crossing,Suburban,RES,204 Aurora Road,46.4424,-81.039,1356,R-1,True
+SUD-00105,99-0006-0105,COPPER,Copper Works,Mixed Use,MUR,205 Boreal Avenue,46.4455,-81.039,1365,RM-2,True
+SUD-00106,99-0006-0106,VALLEY,Valley East,Rural,RES,206 Copper Lane,46.4486,-81.039,1374,R-1,True
+SUD-00107,99-0006-0107,CENTRAL,Central Sudsberry,Urban Core,RES,207 Granite Drive,46.4517,-81.039,1383,R-1,True
+SUD-00108,99-0006-0108,NORTH,North Ridge,Urban,RES,208 Juniper Road,46.4548,-81.039,1392,R-1,True
+SUD-00109,99-0006-0109,LAKE,Lake Junction,Waterfront,RES,209 Northern Light Avenue,46.4579,-81.039,1401,R-1,True
+SUD-00110,99-0006-0110,PINE,Pine Crossing,Suburban,COM,210 Pinecone Lane,46.461,-81.039,2770,C-2,True
+SUD-00111,99-0006-0111,COPPER,Copper Works,Mixed Use,RES,211 Silver Birch Drive,46.4641,-81.039,1419,R-1,True
+SUD-00112,99-0006-0112,VALLEY,Valley East,Rural,MUR,212 Aurora Road,46.4672,-81.039,1428,RM-2,True
+SUD-00113,99-0006-0113,CENTRAL,Central Sudsberry,Urban Core,RES,213 Boreal Avenue,46.4703,-81.039,1437,R-1,True
+SUD-00114,99-0006-0114,NORTH,North Ridge,Urban,RES,214 Copper Lane,46.4734,-81.039,1446,R-1,True
+SUD-00115,99-0006-0115,LAKE,Lake Junction,Waterfront,RES,215 Granite Drive,46.4765,-81.039,1455,R-1,True
+SUD-00116,99-0006-0116,PINE,Pine Crossing,Suburban,RES,216 Juniper Road,46.4796,-81.039,1464,R-1,True
+SUD-00117,99-0006-0117,COPPER,Copper Works,Mixed Use,RES,217 Northern Light Avenue,46.4827,-81.039,1473,R-1,True
+SUD-00118,99-0006-0118,VALLEY,Valley East,Rural,RES,218 Pinecone Lane,46.4858,-81.039,1482,R-1,True
+SUD-00119,99-0006-0119,CENTRAL,Central Sudsberry,Urban Core,AGR,219 Silver Birch Drive,46.4889,-81.039,21877,AG-1,True
+SUD-00120,99-0006-0120,NORTH,North Ridge,Urban,RES,220 Aurora Road,46.43,-81.039,1500,R-1,True
+SUD-00121,99-0007-0121,LAKE,Lake Junction,Waterfront,COM,221 Boreal Avenue,46.4331,-81.0348,2957,C-2,True
+SUD-00122,99-0007-0122,PINE,Pine Crossing,Suburban,RES,222 Copper Lane,46.4362,-81.0348,1518,R-1,True
+SUD-00123,99-0007-0123,COPPER,Copper Works,Mixed Use,RES,223 Granite Drive,46.4393,-81.0348,1527,R-1,True
+SUD-00124,99-0007-0124,VALLEY,Valley East,Rural,RES,224 Juniper Road,46.4424,-81.0348,1536,R-1,True
+SUD-00125,99-0007-0125,CENTRAL,Central Sudsberry,Urban Core,RES,225 Northern Light Avenue,46.4455,-81.0348,1545,R-1,True
+SUD-00126,99-0007-0126,NORTH,North Ridge,Urban,MUR,226 Pinecone Lane,46.4486,-81.0348,1554,RM-2,True
+SUD-00127,99-0007-0127,LAKE,Lake Junction,Waterfront,RES,227 Silver Birch Drive,46.4517,-81.0348,1563,R-1,True
+SUD-00128,99-0007-0128,PINE,Pine Crossing,Suburban,RES,228 Aurora Road,46.4548,-81.0348,1572,R-1,True
+SUD-00129,99-0007-0129,COPPER,Copper Works,Mixed Use,RES,229 Boreal Avenue,46.4579,-81.0348,1581,R-1,True
+SUD-00130,99-0007-0130,VALLEY,Valley East,Rural,RES,230 Copper Lane,46.461,-81.0348,1590,R-1,True
+SUD-00131,99-0007-0131,CENTRAL,Central Sudsberry,Urban Core,RES,231 Granite Drive,46.4641,-81.0348,1599,R-1,True
+SUD-00132,99-0007-0132,NORTH,North Ridge,Urban,COM,232 Juniper Road,46.4672,-81.0348,3144,C-2,True
+SUD-00133,99-0007-0133,LAKE,Lake Junction,Waterfront,MUR,233 Northern Light Avenue,46.4703,-81.0348,1617,RM-2,True
+SUD-00134,99-0007-0134,PINE,Pine Crossing,Suburban,RES,234 Pinecone Lane,46.4734,-81.0348,1626,R-1,True
+SUD-00135,99-0007-0135,COPPER,Copper Works,Mixed Use,RES,235 Silver Birch Drive,46.4765,-81.0348,1635,R-1,True
+SUD-00136,99-0007-0136,VALLEY,Valley East,Rural,AGR,236 Aurora Road,46.4796,-81.0348,23288,AG-1,True
+SUD-00137,99-0007-0137,CENTRAL,Central Sudsberry,Urban Core,RES,237 Boreal Avenue,46.4827,-81.0348,1653,R-1,True
+SUD-00138,99-0007-0138,NORTH,North Ridge,Urban,RES,238 Copper Lane,46.4858,-81.0348,1662,R-1,True
+SUD-00139,99-0007-0139,LAKE,Lake Junction,Waterfront,RES,239 Granite Drive,46.4889,-81.0348,1671,R-1,True
+SUD-00140,99-0007-0140,PINE,Pine Crossing,Suburban,MUR,240 Juniper Road,46.43,-81.0348,1680,RM-2,True
+SUD-00141,99-0008-0141,COPPER,Copper Works,Mixed Use,RES,241 Northern Light Avenue,46.4331,-81.0306,1689,R-1,True
+SUD-00142,99-0008-0142,VALLEY,Valley East,Rural,RES,242 Pinecone Lane,46.4362,-81.0306,1698,R-1,True
+SUD-00143,99-0008-0143,CENTRAL,Central Sudsberry,Urban Core,COM,243 Silver Birch Drive,46.4393,-81.0306,3331,C-2,True
+SUD-00144,99-0008-0144,NORTH,North Ridge,Urban,RES,244 Aurora Road,46.4424,-81.0306,1716,R-1,True
+SUD-00145,99-0008-0145,LAKE,Lake Junction,Waterfront,RES,245 Boreal Avenue,46.4455,-81.0306,1725,R-1,True
+SUD-00146,99-0008-0146,PINE,Pine Crossing,Suburban,RES,246 Copper Lane,46.4486,-81.0306,1734,R-1,True
+SUD-00147,99-0008-0147,COPPER,Copper Works,Mixed Use,MUR,247 Granite Drive,46.4517,-81.0306,1743,RM-2,True
+SUD-00148,99-0008-0148,VALLEY,Valley East,Rural,RES,248 Juniper Road,46.4548,-81.0306,1752,R-1,True
+SUD-00149,99-0008-0149,CENTRAL,Central Sudsberry,Urban Core,RES,249 Northern Light Avenue,46.4579,-81.0306,1761,R-1,True
+SUD-00150,99-0008-0150,NORTH,North Ridge,Urban,RES,250 Pinecone Lane,46.461,-81.0306,1770,R-1,True
+SUD-00151,99-0008-0151,LAKE,Lake Junction,Waterfront,RES,251 Silver Birch Drive,46.4641,-81.0306,1779,R-1,True
+SUD-00152,99-0008-0152,PINE,Pine Crossing,Suburban,RES,252 Aurora Road,46.4672,-81.0306,1788,R-1,True
+SUD-00153,99-0008-0153,COPPER,Copper Works,Mixed Use,AGR,253 Boreal Avenue,46.4703,-81.0306,24699,AG-1,True
+SUD-00154,99-0008-0154,VALLEY,Valley East,Rural,COM,254 Copper Lane,46.4734,-81.0306,3518,C-2,True
+SUD-00155,99-0008-0155,CENTRAL,Central Sudsberry,Urban Core,RES,255 Granite Drive,46.4765,-81.0306,1815,R-1,True
+SUD-00156,99-0008-0156,NORTH,North Ridge,Urban,RES,256 Juniper Road,46.4796,-81.0306,1824,R-1,True
+SUD-00157,99-0008-0157,LAKE,Lake Junction,Waterfront,RES,257 Northern Light Avenue,46.4827,-81.0306,1833,R-1,True
+SUD-00158,99-0008-0158,PINE,Pine Crossing,Suburban,RES,258 Pinecone Lane,46.4858,-81.0306,1842,R-1,True
+SUD-00159,99-0008-0159,COPPER,Copper Works,Mixed Use,RES,259 Silver Birch Drive,46.4889,-81.0306,1851,R-1,True
+SUD-00160,99-0008-0160,VALLEY,Valley East,Rural,RES,260 Aurora Road,46.43,-81.0306,1860,R-1,True
+SUD-00161,99-0009-0161,CENTRAL,Central Sudsberry,Urban Core,MUR,261 Boreal Avenue,46.4331,-81.0264,1869,RM-2,True
+SUD-00162,99-0009-0162,NORTH,North Ridge,Urban,RES,262 Copper Lane,46.4362,-81.0264,1878,R-1,True
+SUD-00163,99-0009-0163,LAKE,Lake Junction,Waterfront,RES,263 Granite Drive,46.4393,-81.0264,1887,R-1,True
+SUD-00164,99-0009-0164,PINE,Pine Crossing,Suburban,RES,264 Juniper Road,46.4424,-81.0264,1896,R-1,True
+SUD-00165,99-0009-0165,COPPER,Copper Works,Mixed Use,COM,265 Northern Light Avenue,46.4455,-81.0264,3705,C-2,True
+SUD-00166,99-0009-0166,VALLEY,Valley East,Rural,RES,266 Pinecone Lane,46.4486,-81.0264,1914,R-1,True
+SUD-00167,99-0009-0167,CENTRAL,Central Sudsberry,Urban Core,RES,267 Silver Birch Drive,46.4517,-81.0264,1923,R-1,True
+SUD-00168,99-0009-0168,NORTH,North Ridge,Urban,MUR,268 Aurora Road,46.4548,-81.0264,1932,RM-2,True
+SUD-00169,99-0009-0169,LAKE,Lake Junction,Waterfront,RES,269 Boreal Avenue,46.4579,-81.0264,1941,R-1,True
+SUD-00170,99-0009-0170,PINE,Pine Crossing,Suburban,AGR,270 Copper Lane,46.461,-81.0264,26110,AG-1,True
+SUD-00171,99-0009-0171,COPPER,Copper Works,Mixed Use,RES,271 Granite Drive,46.4641,-81.0264,1959,R-1,True
+SUD-00172,99-0009-0172,VALLEY,Valley East,Rural,RES,272 Juniper Road,46.4672,-81.0264,1968,R-1,True
+SUD-00173,99-0009-0173,CENTRAL,Central Sudsberry,Urban Core,RES,273 Northern Light Avenue,46.4703,-81.0264,1977,R-1,True
+SUD-00174,99-0009-0174,NORTH,North Ridge,Urban,RES,274 Pinecone Lane,46.4734,-81.0264,1986,R-1,True
+SUD-00175,99-0009-0175,LAKE,Lake Junction,Waterfront,MUR,275 Silver Birch Drive,46.4765,-81.0264,1995,RM-2,True
+SUD-00176,99-0009-0176,PINE,Pine Crossing,Suburban,COM,276 Aurora Road,46.4796,-81.0264,3892,C-2,True
+SUD-00177,99-0009-0177,COPPER,Copper Works,Mixed Use,RES,277 Boreal Avenue,46.4827,-81.0264,2013,R-1,True
+SUD-00178,99-0009-0178,VALLEY,Valley East,Rural,RES,278 Copper Lane,46.4858,-81.0264,2022,R-1,True
+SUD-00179,99-0009-0179,CENTRAL,Central Sudsberry,Urban Core,RES,279 Granite Drive,46.4889,-81.0264,2031,R-1,True
+SUD-00180,99-0009-0180,NORTH,North Ridge,Urban,RES,280 Juniper Road,46.43,-81.0264,2040,R-1,True
+SUD-00181,99-0010-0181,LAKE,Lake Junction,Waterfront,RES,281 Northern Light Avenue,46.4331,-81.0222,2049,R-1,True
+SUD-00182,99-0010-0182,PINE,Pine Crossing,Suburban,MUR,282 Pinecone Lane,46.4362,-81.0222,2058,RM-2,True
+SUD-00183,99-0010-0183,COPPER,Copper Works,Mixed Use,RES,283 Silver Birch Drive,46.4393,-81.0222,2067,R-1,True
+SUD-00184,99-0010-0184,VALLEY,Valley East,Rural,RES,284 Aurora Road,46.4424,-81.0222,2076,R-1,True
+SUD-00185,99-0010-0185,CENTRAL,Central Sudsberry,Urban Core,RES,285 Boreal Avenue,46.4455,-81.0222,2085,R-1,True
+SUD-00186,99-0010-0186,NORTH,North Ridge,Urban,RES,286 Copper Lane,46.4486,-81.0222,2094,R-1,True
+SUD-00187,99-0010-0187,LAKE,Lake Junction,Waterfront,AGR,287 Granite Drive,46.4517,-81.0222,27521,AG-1,True
+SUD-00188,99-0010-0188,PINE,Pine Crossing,Suburban,RES,288 Juniper Road,46.4548,-81.0222,2112,R-1,True
+SUD-00189,99-0010-0189,COPPER,Copper Works,Mixed Use,MUR,289 Northern Light Avenue,46.4579,-81.0222,2121,RM-2,True
+SUD-00190,99-0010-0190,VALLEY,Valley East,Rural,RES,290 Pinecone Lane,46.461,-81.0222,2130,R-1,True
+SUD-00191,99-0010-0191,CENTRAL,Central Sudsberry,Urban Core,RES,291 Silver Birch Drive,46.4641,-81.0222,2139,R-1,True
+SUD-00192,99-0010-0192,NORTH,North Ridge,Urban,RES,292 Aurora Road,46.4672,-81.0222,2148,R-1,True
+SUD-00193,99-0010-0193,LAKE,Lake Junction,Waterfront,RES,293 Boreal Avenue,46.4703,-81.0222,2157,R-1,True
+SUD-00194,99-0010-0194,PINE,Pine Crossing,Suburban,RES,294 Copper Lane,46.4734,-81.0222,2166,R-1,True
+SUD-00195,99-0010-0195,COPPER,Copper Works,Mixed Use,RES,295 Granite Drive,46.4765,-81.0222,2175,R-1,True
+SUD-00196,99-0010-0196,VALLEY,Valley East,Rural,MUR,296 Juniper Road,46.4796,-81.0222,2184,RM-2,True
+SUD-00197,99-0010-0197,CENTRAL,Central Sudsberry,Urban Core,RES,297 Northern Light Avenue,46.4827,-81.0222,2193,R-1,True
+SUD-00198,99-0010-0198,NORTH,North Ridge,Urban,COM,298 Pinecone Lane,46.4858,-81.0222,4266,C-2,True
+SUD-00199,99-0010-0199,LAKE,Lake Junction,Waterfront,RES,299 Silver Birch Drive,46.4889,-81.0222,2211,R-1,True
+SUD-00200,99-0010-0200,PINE,Pine Crossing,Suburban,RES,300 Aurora Road,46.43,-81.0222,2220,R-1,True
+SUD-00201,99-0011-0201,COPPER,Copper Works,Mixed Use,RES,301 Boreal Avenue,46.4331,-81.018,2229,R-1,True
+SUD-00202,99-0011-0202,VALLEY,Valley East,Rural,RES,302 Copper Lane,46.4362,-81.018,2238,R-1,True
+SUD-00203,99-0011-0203,CENTRAL,Central Sudsberry,Urban Core,MUR,303 Granite Drive,46.4393,-81.018,2247,RM-2,True
+SUD-00204,99-0011-0204,NORTH,North Ridge,Urban,AGR,304 Juniper Road,46.4424,-81.018,28932,AG-1,True
+SUD-00205,99-0011-0205,LAKE,Lake Junction,Waterfront,RES,305 Northern Light Avenue,46.4455,-81.018,2265,R-1,True
+SUD-00206,99-0011-0206,PINE,Pine Crossing,Suburban,RES,306 Pinecone Lane,46.4486,-81.018,2274,R-1,True
+SUD-00207,99-0011-0207,COPPER,Copper Works,Mixed Use,RES,307 Silver Birch Drive,46.4517,-81.018,2283,R-1,True
+SUD-00208,99-0011-0208,VALLEY,Valley East,Rural,RES,308 Aurora Road,46.4548,-81.018,2292,R-1,True
+SUD-00209,99-0011-0209,CENTRAL,Central Sudsberry,Urban Core,COM,309 Boreal Avenue,46.4579,-81.018,4453,C-2,True
+SUD-00210,99-0011-0210,NORTH,North Ridge,Urban,MUR,310 Copper Lane,46.461,-81.018,2310,RM-2,True
+SUD-00211,99-0011-0211,LAKE,Lake Junction,Waterfront,RES,311 Granite Drive,46.4641,-81.018,2319,R-1,True
+SUD-00212,99-0011-0212,PINE,Pine Crossing,Suburban,RES,312 Juniper Road,46.4672,-81.018,2328,R-1,True
+SUD-00213,99-0011-0213,COPPER,Copper Works,Mixed Use,RES,313 Northern Light Avenue,46.4703,-81.018,2337,R-1,True
+SUD-00214,99-0011-0214,VALLEY,Valley East,Rural,RES,314 Pinecone Lane,46.4734,-81.018,2346,R-1,True
+SUD-00215,99-0011-0215,CENTRAL,Central Sudsberry,Urban Core,RES,315 Silver Birch Drive,46.4765,-81.018,2355,R-1,True
+SUD-00216,99-0011-0216,NORTH,North Ridge,Urban,RES,316 Aurora Road,46.4796,-81.018,2364,R-1,True
+SUD-00217,99-0011-0217,LAKE,Lake Junction,Waterfront,MUR,317 Boreal Avenue,46.4827,-81.018,2373,RM-2,True
+SUD-00218,99-0011-0218,PINE,Pine Crossing,Suburban,RES,318 Copper Lane,46.4858,-81.018,2382,R-1,True
+SUD-00219,99-0011-0219,COPPER,Copper Works,Mixed Use,RES,319 Granite Drive,46.4889,-81.018,2391,R-1,True
+SUD-00220,99-0011-0220,VALLEY,Valley East,Rural,COM,320 Juniper Road,46.43,-81.018,4640,C-2,True
+SUD-00221,99-0012-0221,CENTRAL,Central Sudsberry,Urban Core,AGR,321 Northern Light Avenue,46.4331,-81.0138,30343,AG-1,True
+SUD-00222,99-0012-0222,NORTH,North Ridge,Urban,RES,322 Pinecone Lane,46.4362,-81.0138,2418,R-1,True
+SUD-00223,99-0012-0223,LAKE,Lake Junction,Waterfront,RES,323 Silver Birch Drive,46.4393,-81.0138,2427,R-1,True
+SUD-00224,99-0012-0224,PINE,Pine Crossing,Suburban,MUR,324 Aurora Road,46.4424,-81.0138,2436,RM-2,True
+SUD-00225,99-0012-0225,COPPER,Copper Works,Mixed Use,RES,325 Boreal Avenue,46.4455,-81.0138,2445,R-1,True
+SUD-00226,99-0012-0226,VALLEY,Valley East,Rural,RES,326 Copper Lane,46.4486,-81.0138,2454,R-1,True
+SUD-00227,99-0012-0227,CENTRAL,Central Sudsberry,Urban Core,RES,327 Granite Drive,46.4517,-81.0138,2463,R-1,True
+SUD-00228,99-0012-0228,NORTH,North Ridge,Urban,RES,328 Juniper Road,46.4548,-81.0138,2472,R-1,True
+SUD-00229,99-0012-0229,LAKE,Lake Junction,Waterfront,RES,329 Northern Light Avenue,46.4579,-81.0138,2481,R-1,True
+SUD-00230,99-0012-0230,PINE,Pine Crossing,Suburban,RES,330 Pinecone Lane,46.461,-81.0138,2490,R-1,True
+SUD-00231,99-0012-0231,COPPER,Copper Works,Mixed Use,COM,331 Silver Birch Drive,46.4641,-81.0138,4827,C-2,True
+SUD-00232,99-0012-0232,VALLEY,Valley East,Rural,RES,332 Aurora Road,46.4672,-81.0138,2508,R-1,True
+SUD-00233,99-0012-0233,CENTRAL,Central Sudsberry,Urban Core,RES,333 Boreal Avenue,46.4703,-81.0138,2517,R-1,True
+SUD-00234,99-0012-0234,NORTH,North Ridge,Urban,RES,334 Copper Lane,46.4734,-81.0138,2526,R-1,True
+SUD-00235,99-0012-0235,LAKE,Lake Junction,Waterfront,RES,335 Granite Drive,46.4765,-81.0138,2535,R-1,True
+SUD-00236,99-0012-0236,PINE,Pine Crossing,Suburban,RES,336 Juniper Road,46.4796,-81.0138,2544,R-1,True
+SUD-00237,99-0012-0237,COPPER,Copper Works,Mixed Use,RES,337 Northern Light Avenue,46.4827,-81.0138,2553,R-1,True
+SUD-00238,99-0012-0238,VALLEY,Valley East,Rural,AGR,338 Pinecone Lane,46.4858,-81.0138,31754,AG-1,True
+SUD-00239,99-0012-0239,CENTRAL,Central Sudsberry,Urban Core,RES,339 Silver Birch Drive,46.4889,-81.0138,2571,R-1,True
+SUD-00240,99-0012-0240,NORTH,North Ridge,Urban,RES,340 Aurora Road,46.43,-81.0138,2580,R-1,True

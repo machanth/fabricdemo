@@ -1,0 +1,118 @@
+# Property Assessment Fabric Hacker Lab
+
+Build an end-to-end Microsoft Fabric property-assessment platform from **explicitly fictional** Sudsberry records. The lab uses Azure SQL, Cosmos DB, and ADLS Gen2 sources; OneLake; a medallion Lakehouse; a Warehouse; a Direct Lake semantic model; a thin report; a Generation 2 ontology; two data agents; and governance/operations evidence.
+
+**Target:** `MaddysWS` (`930bbe6f-b256-46b7-a70e-f3dcab99d2c9`)  
+**Time:** 3-5 hours locally; 5-8 hours with Azure/Fabric deployment and preview UI work.  
+**Safety:** no real owners, addresses, parcels, valuations, or tax advice. Never add credentials to this folder.
+
+## Architecture and build order
+
+```mermaid
+flowchart LR
+  SQL[Azure SQL<br/>parcels, assessments, sales] --> OL[OneLake landing]
+  COS[Cosmos DB<br/>profiles and inspections] --> OL
+  ADLS[ADLS Gen2<br/>appeal JSON and Parquet] --> OL
+  OL --> B[Bronze Delta]
+  B --> S[Silver quality and parcelId joins]
+  S --> G[Gold dimensions and facts]
+  G --> WH[Fabric Warehouse]
+  G --> SM[Direct Lake semantic model]
+  SM --> R[Thin PBIR report]
+  G --> ONT[Generation 2 ontology]
+  SM --> SA[Semantic data agent]
+  ONT --> OA[Ontology data agent]
+  WH --> GOV[Catalog, lineage, Purview, metrics]
+  R --> GOV
+```
+
+```text
+0 Foundation -> 1 Data -> 2 Sources/OneLake -> 3 Lakehouse -> 4 Warehouse
+             -> 5 Semantic model/report -> 6 Ontology -> 7 Data agents
+             -> 8 Governance, verification, teardown
+```
+
+## Prerequisite gate
+
+- Python 3.10+, PowerShell 7+, Azure CLI, and optionally `sqlcmd`.
+- Contributor rights for Azure source deployment, including role assignments.
+- Fabric workspace Contributor or Admin rights and capacity-backed `MaddysWS`.
+- Tenant switches for Fabric REST APIs, service principals (if used), Data Agent, and Ontology preview as applicable.
+- Power BI Desktop with PBIP/TMDL support if editing the report/model locally.
+
+```powershell
+cd .\property-assessment-fabric
+python -m pip install -r .\requirements.txt
+.\scripts\preflight.ps1
+python .\scripts\generate_data.py --scale 240 --seed 20261013
+python .\scripts\validate_lab.py
+python -m pytest .\tests -q
+```
+
+Pass only when preflight, validation, and tests succeed. Copy `.env.example` to an untracked `.env` only if your shell tooling uses it. Authentication is `AzureCliCredential` first and `DefaultAzureCredential` second; no secret is required in source control.
+
+## Numbered lab
+
+| Step | Objective and command | Explore | Evaluation checkpoint and evidence |
+|---|---|---|---|
+| [0](docs/00-foundation.md) | Prove tools, auth design, configuration, and ownership safety. `.\scripts\preflight.ps1` | Which actions require workspace Admin versus Contributor? | Screenshot/console output showing local preflight pass; explain `.state` ownership guard. |
+| [1](docs/01-synthetic-data.md) | Generate credible multi-source data. `python .\scripts\generate_data.py --scale 240 --seed 20261013` | Which classes have the widest assessment-to-sale ratios? | `data/generated/manifest.json`, validation pass, expected counts 240/480/80/240/300. |
+| [2](docs/02-onelake-sources.md) | Deploy/seed sources, create Fabric connections/shortcuts, inspect Files. `.\scripts\deploy_sources.ps1 -PlanOnly` | Compare JSON nesting, relational keys, and Parquet schema. | Connection/shortcut screenshots or a documented access blocker; no secrets. |
+| [3](docs/03-lakehouse.md) | Deploy and run Bronze/Silver/Gold notebook. `python .\scripts\fabric_deploy.py` | Find nulls, duplicates, unknown `parcelId`s, and enrichment opportunities. | Five Gold Delta tables plus zero failed assertions. |
+| [4](docs/04-warehouse.md) | Create star-schema Warehouse and run `fabric/Property Assessment Warehouse/deploy.sql`. | Query neighborhood equity and appeal resolution. | Object explorer plus three successful exploration queries. |
+| [5](docs/05-semantic-model.md) | Bind Direct Lake source IDs, deploy TMDL/PBIR, test measures and RLS. | Compare ResidentialReviewer and CommercialReviewer. | Model diagram, measure results, two persona screenshots. |
+| [6](docs/06-ontology.md) | Deploy Gen2 shell where REST preview is enabled; bind Gold entities in UI. | Explain Parcel -> Assessment and Parcel -> Appeal. | Ontology readback or precise preview/access blocker plus binding screenshot. |
+| [7](docs/07-data-agents.md) | Replace item-ID placeholders, deploy drafts, test, then publish in UI. | Ask governed, adversarial, and persona-specific prompts. | Prompt transcript with expected shape and synthetic warning. |
+| [8](docs/08-governance-operations.md) | Capture lineage/catalog/Purview/metrics evidence and verify/teardown safely. | Identify the heaviest notebook stage and upstream impact. | Evidence pack, item IDs/status codes, and ownership-restricted teardown proof. |
+
+## Automation boundary
+
+**Automated:** deterministic generation; JSON/Parquet/contract checks; Azure resource shell; identity-based source seeding; Fabric item create/update for definitions; owned-item state; dry run; local tests; owned-item teardown.
+
+**Manual or tenant-dependent:** connection credentials; SQL/Cosmos mirroring eligibility; shortcut connection selection; Lakehouse attachment and notebook run; Warehouse SQL execution/data load; semantic source binding; RLS membership; PBIR visual refinement; Ontology binding; Data Agent source IDs, testing, and publish; Catalog endorsement, Purview evidence, and Capacity Metrics screenshots.
+
+The deployment script deliberately refuses unowned name collisions and does not silently claim unsupported success. Preview artifacts require `--include-preview`.
+
+## Deployment
+
+```powershell
+# Inspect deterministic Azure names; makes no changes.
+.\scripts\deploy_sources.ps1 -PlanOnly
+
+# Optional Azure deployment and identity-based seed.
+.\scripts\deploy_sources.ps1
+.\scripts\seed_sources.ps1
+
+# Fabric dry run, then supported definitions.
+python .\scripts\fabric_deploy.py --dry-run
+python .\scripts\fabric_deploy.py
+
+# Only after confirming Ontology/Data Agent preview availability:
+python .\scripts\fabric_deploy.py --include-preview
+```
+
+Use `az login --service-principal` or workload identity in CI. Initial Azure SQL creation in this sample intentionally requires an Entra user administrator; production automation should precreate the server with an Entra group administrator and grant the service principal database roles.
+
+## Troubleshooting quick map
+
+- `401/403` from Fabric: confirm `az account get-access-token --resource https://api.fabric.microsoft.com`, workspace role, tenant API switch, and capacity.
+- Item collision: rename the existing item or explicitly reconcile `.state/owned-items.json`; never adopt by name automatically.
+- Notebook cannot find Files: attach the Lakehouse and upload/copy generated folders to `Files/landing/property-assessment`.
+- Direct Lake error: replace the semantic model expression placeholder by connecting the model to the deployed Lakehouse SQL analytics endpoint.
+- Ontology/Data Agent rejected: confirm tenant preview availability and use the exact UI steps in Steps 6-7.
+- Warehouse tables empty: schema creation and data loading are separate; use a pipeline or `COPY INTO` from Lakehouse-exported Parquet.
+- Teardown: run only `python .\scripts\fabric_teardown.py --confirm DELETE-OWNED-PROPERTY-ASSESSMENT-ITEMS`; Azure sources are intentionally not auto-deleted.
+
+## Verified platform references
+
+The automation boundary follows the Microsoft Fabric documentation available when this lab was built:
+
+- [Fabric item management and definitions](https://learn.microsoft.com/rest/api/fabric/articles/item-management/item-management-overview)
+- [Lakehouse definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/lakehouse-definition)
+- [Notebook definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/notebook-definition)
+- [Semantic model definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/semantic-model-definition)
+- [Ontology definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/ontology-definition)
+- [Data Agent definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/data-agent-definition)
+- [Fabric Git source-code formats](https://learn.microsoft.com/fabric/cicd/git-integration/source-code-format)
+
+Preview surfaces and item schemas can change; use definition readback in the target tenant as the final compatibility check.

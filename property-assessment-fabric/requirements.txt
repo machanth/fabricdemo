@@ -1,0 +1,7 @@
+azure-identity>=1.19,<2
+azure-cosmos>=4.9,<5
+duckdb>=1.1,<2
+jsonschema>=4.23,<5
+pyarrow>=18,<21
+pytest>=8.3,<9
+requests>=2.32,<3

@@ -1,0 +1,16 @@
+model Model
+	culture: en-CA
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-CA
+
+	ref table DimProperty
+	ref table DimDate
+	ref table FactAssessment
+	ref table FactSale
+	ref table FactAppeal
+
+	ref role ResidentialReviewer
+	ref role CommercialReviewer
+
+	annotation PBI_QueryOrder = ["DimProperty","DimDate","FactAssessment","FactSale","FactAppeal"]
+

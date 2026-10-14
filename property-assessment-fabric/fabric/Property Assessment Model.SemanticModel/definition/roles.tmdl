@@ -1,0 +1,10 @@
+role ResidentialReviewer
+	modelPermission: read
+
+	tablePermission DimProperty = [PropertyClassCode] IN {"RES", "MUR"}
+
+role CommercialReviewer
+	modelPermission: read
+
+	tablePermission DimProperty = [PropertyClassCode] IN {"COM", "AGR"}
+

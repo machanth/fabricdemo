@@ -1,0 +1,24 @@
+relationship AssessmentProperty
+	fromColumn: FactAssessment.PropertyKey
+	toColumn: DimProperty.PropertyKey
+
+relationship AssessmentDate
+	fromColumn: FactAssessment.ValuationDateKey
+	toColumn: DimDate.DateKey
+
+relationship SaleProperty
+	fromColumn: FactSale.PropertyKey
+	toColumn: DimProperty.PropertyKey
+
+relationship SaleDate
+	fromColumn: FactSale.SaleDateKey
+	toColumn: DimDate.DateKey
+
+relationship AppealProperty
+	fromColumn: FactAppeal.PropertyKey
+	toColumn: DimProperty.PropertyKey
+
+relationship AppealDate
+	fromColumn: FactAppeal.SubmittedDateKey
+	toColumn: DimDate.DateKey
+

@@ -1,0 +1,32 @@
+table DimDate
+	column DateKey
+		dataType: int64
+		isHidden
+		sourceColumn: dateKey
+
+	column Date
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		sourceColumn: date
+
+	column Year
+		dataType: int64
+		sourceColumn: year
+
+	column MonthName
+		dataType: string
+		sourceColumn: monthName
+		sortByColumn: Month
+
+	column Month
+		dataType: int64
+		isHidden
+		sourceColumn: month
+
+	partition DimDate = entity
+		mode: directLake
+		source
+			entityName: dim_date
+			schemaName: dbo
+			expressionSource: PropertyAssessmentLakehouse
+

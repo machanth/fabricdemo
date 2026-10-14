@@ -1,0 +1,6 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/lakehouse/definition/lakehouseMetadata/1.0.0/schema.json",
+  "schemaVersion": "1.0",
+  "enableSchemas": true
+}
+

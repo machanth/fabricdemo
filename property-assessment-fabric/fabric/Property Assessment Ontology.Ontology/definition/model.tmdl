@@ -1,0 +1,6 @@
+model Model
+	culture: en-CA
+
+	annotation Fabric_OntologyGeneration = 2
+	annotation SyntheticDataWarning = All entities describe fictional Sudsberry records.
+

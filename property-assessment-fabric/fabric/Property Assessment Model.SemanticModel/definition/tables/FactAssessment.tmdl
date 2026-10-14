@@ -1,0 +1,53 @@
+table FactAssessment
+	description: Certified fictional assessed values by parcel and tax year.
+
+	measure 'Total Assessed Value' = SUM(FactAssessment[AssessedValue])
+		formatString: $#,0
+		description: Sum of fictional certified assessed values.
+
+	measure 'Average Assessment' = AVERAGE(FactAssessment[AssessedValue])
+		formatString: $#,0
+
+	measure 'Estimated Tax' = SUM(FactAssessment[EstimatedTax])
+		formatString: $#,0
+		description: Illustrative estimate; not legally authoritative.
+
+	measure 'Assessment to Sale Ratio' = DIVIDE([Total Assessed Value], [Total Sale Value])
+		formatString: 0.00
+
+	column AssessmentId
+		dataType: string
+		isHidden
+		sourceColumn: assessmentId
+
+	column PropertyKey
+		dataType: int64
+		isHidden
+		sourceColumn: propertyKey
+
+	column ValuationDateKey
+		dataType: int64
+		isHidden
+		sourceColumn: valuationDateKey
+
+	column TaxYear
+		dataType: int64
+		sourceColumn: taxYear
+
+	column AssessedValue
+		dataType: double
+		isHidden
+		sourceColumn: assessedValue
+
+	column EstimatedTax
+		dataType: double
+		isHidden
+		sourceColumn: estimatedTax
+
+	partition FactAssessment = entity
+		mode: directLake
+		source
+			entityName: fact_assessment
+			schemaName: dbo
+			expressionSource: PropertyAssessmentLakehouse
+

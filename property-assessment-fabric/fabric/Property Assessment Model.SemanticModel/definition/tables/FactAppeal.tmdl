@@ -1,0 +1,52 @@
+table FactAppeal
+	measure 'Appeal Count' = COUNTROWS(FactAppeal)
+		formatString: #,0
+
+	measure 'Resolved Appeal Count' = CALCULATE([Appeal Count], FactAppeal[ResolvedFlag] = TRUE())
+		formatString: #,0
+
+	measure 'Resolution Rate' = DIVIDE([Resolved Appeal Count], [Appeal Count])
+		formatString: 0.0%
+
+	measure 'Average Requested Adjustment' = AVERAGE(FactAppeal[RequestedAdjustmentPct])
+		formatString: 0.0%
+
+	column PropertyKey
+		dataType: int64
+		isHidden
+		sourceColumn: propertyKey
+
+	column SubmittedDateKey
+		dataType: int64
+		isHidden
+		sourceColumn: submittedDateKey
+
+	column ReasonCode
+		dataType: string
+		sourceColumn: reasonCode
+
+	column Status
+		dataType: string
+		sourceColumn: status
+
+	column GroundTruthSentiment
+		dataType: string
+		sourceColumn: groundTruthSentiment
+
+	column RequestedAdjustmentPct
+		dataType: double
+		isHidden
+		sourceColumn: requestedAdjustmentPct
+
+	column ResolvedFlag
+		dataType: boolean
+		isHidden
+		sourceColumn: resolvedFlag
+
+	partition FactAppeal = entity
+		mode: directLake
+		source
+			entityName: fact_appeal
+			schemaName: dbo
+			expressionSource: PropertyAssessmentLakehouse
+

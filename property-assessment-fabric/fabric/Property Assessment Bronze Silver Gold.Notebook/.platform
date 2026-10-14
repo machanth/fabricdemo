@@ -1,0 +1,13 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "Property Assessment Bronze Silver Gold",
+    "description": "Builds deterministic Bronze, Silver, and Gold Delta layers for the fictional property-assessment lab."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "b5661062-5e7d-45f0-853a-3f1d5251cc5e"
+  }
+}
+
