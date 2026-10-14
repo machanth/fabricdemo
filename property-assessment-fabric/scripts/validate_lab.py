@@ -116,8 +116,18 @@ def validate_artifacts() -> None:
     if {path.stem for path in role_paths} != {"ResidentialReviewer", "CommercialReviewer"}:
         fail("Semantic model must contain the two expected role files.")
     table_columns = {}
+    allowed_table_properties = {
+        "dataType", "formatString", "sourceColumn", "sortByColumn",
+        "mode", "entityName", "schemaName", "expressionSource",
+    }
     for table_path in (semantic_definition / "tables").glob("*.tmdl"):
         content = table_path.read_text(encoding="utf-8")
+        if re.search(r"(?m)^\s*description\s*:", content):
+            fail(f"Use TMDL /// description comments instead of unsupported description: properties in {table_path.name}")
+        property_names = set(re.findall(r"(?m)^\s*([A-Za-z][A-Za-z0-9]*)\s*:", content))
+        unsupported_properties = property_names - allowed_table_properties
+        if unsupported_properties:
+            fail(f"Unsupported colon-style TMDL properties in {table_path.name}: {sorted(unsupported_properties)}")
         table_match = re.search(r"(?m)^table\s+'?([^'\r\n]+)'?\s*$", content)
         if not table_match:
             fail(f"Unable to parse table declaration in {table_path.name}")

@@ -255,3 +255,20 @@ def test_tmdl_model_uses_folder_discovery_not_ref_declarations():
     assert {
         path.name for path in (definition / "roles").glob("*.tmdl")
     } == {"ResidentialReviewer.tmdl", "CommercialReviewer.tmdl"}
+
+
+def test_tmdl_descriptions_use_documentation_comments():
+    tables = (
+        ROOT
+        / "fabric"
+        / "Property Assessment Model.SemanticModel"
+        / "definition"
+        / "tables"
+    )
+    content = "\n".join(
+        path.read_text(encoding="utf-8") for path in tables.glob("*.tmdl")
+    )
+
+    assert "description:" not in content
+    assert "/// Fictional parcel and neighborhood attributes" in content
+    assert "/// Sum of fictional certified assessed values." in content

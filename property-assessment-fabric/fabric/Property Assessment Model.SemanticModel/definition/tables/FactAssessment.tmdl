@@ -1,16 +1,16 @@
+/// Certified fictional assessed values by parcel and tax year.
 table FactAssessment
-	description: Certified fictional assessed values by parcel and tax year.
 
+	/// Sum of fictional certified assessed values.
 	measure 'Total Assessed Value' = SUM(FactAssessment[AssessedValue])
 		formatString: $#,0
-		description: Sum of fictional certified assessed values.
 
 	measure 'Average Assessment' = AVERAGE(FactAssessment[AssessedValue])
 		formatString: $#,0
 
+	/// Illustrative estimate; not legally authoritative.
 	measure 'Estimated Tax' = SUM(FactAssessment[EstimatedTax])
 		formatString: $#,0
-		description: Illustrative estimate; not legally authoritative.
 
 	measure 'Assessment to Sale Ratio' = DIVIDE([Total Assessed Value], [Total Sale Value])
 		formatString: 0.00
@@ -50,4 +50,3 @@ table FactAssessment
 			entityName: fact_assessment
 			schemaName: dbo
 			expressionSource: PropertyAssessmentLakehouse
-

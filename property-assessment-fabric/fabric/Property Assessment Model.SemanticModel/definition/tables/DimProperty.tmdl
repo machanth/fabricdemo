@@ -1,5 +1,5 @@
+/// Fictional parcel and neighborhood attributes used for assessment analysis.
 table DimProperty
-	description: Fictional parcel and neighborhood attributes used for assessment analysis.
 
 	column PropertyKey
 		dataType: int64
@@ -22,9 +22,9 @@ table DimProperty
 		dataType: string
 		sourceColumn: PropertyClassCode
 
+	/// Fabricated address for demonstration only.
 	column SyntheticAddress
 		dataType: string
-		description: Fabricated address for demonstration only.
 		sourceColumn: SyntheticAddress
 
 	partition DimProperty = entity
@@ -33,4 +33,3 @@ table DimProperty
 			entityName: dim_property
 			schemaName: dbo
 			expressionSource: PropertyAssessmentLakehouse
-
