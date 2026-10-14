@@ -27,6 +27,7 @@
       "displayName": "PropertyAssessmentMedallion",
       "type": "Notebook",
       "source": "fabric/Property Assessment Bronze Silver Gold.Notebook",
+      "defaultLakehouseDisplayName": "PropertyAssessmentLakehouse",
       "automation": "rest-definition"
     },
     {

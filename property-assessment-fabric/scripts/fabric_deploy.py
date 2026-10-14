@@ -12,6 +12,8 @@ from pathlib import Path
 
 import requests
 from azure.identity import AzureCliCredential, ClientSecretCredential, DefaultAzureCredential
+from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
+from azure.storage.filedatalake import DataLakeServiceClient
 from requests.exceptions import ConnectTimeout, ReadTimeout, SSLError
 
 
@@ -24,6 +26,8 @@ MANAGED_DESCRIPTION = "Fictional property-assessment hackathon lab; managed by p
 TRANSIENT_POLL_EXCEPTIONS = (ConnectTimeout, ReadTimeout, SSLError)
 MAX_TRANSIENT_POLL_FAILURES = 8
 MAX_LRO_SECONDS = 900
+ONELAKE_DFS_URL = "https://onelake.dfs.fabric.microsoft.com"
+GOLD_TABLES = ("dim_property", "dim_date", "fact_assessment", "fact_sale", "fact_appeal")
 
 
 class FabricOperationFailed(RuntimeError):
@@ -166,6 +170,44 @@ class Fabric:
     def update_definition(self, item_id: str, definition: dict) -> None:
         self.request("POST", f"/workspaces/{self.workspace_id}/items/{item_id}/updateDefinition", json={"definition": definition})
 
+    def run_notebook(self, item_id: str) -> dict:
+        response = self.session.post(
+            f"{self.api_base}/workspaces/{self.workspace_id}/items/{item_id}/jobs/instances?jobType=RunNotebook",
+            json={"executionData": {}},
+            timeout=120,
+        )
+        if response.status_code >= 400:
+            raise RuntimeError(f"Notebook job submission failed: {response.status_code} {response.text}")
+        if response.status_code != 202:
+            return response.json() if response.content else {"status": "Completed"}
+        location = response.headers.get("Location")
+        if not location:
+            raise RuntimeError("Notebook job returned HTTP 202 without a Location header.")
+        deadline = time.monotonic() + MAX_LRO_SECONDS
+        delay = self.retry_after_seconds(response)
+        transient_failures = 0
+        while time.monotonic() < deadline:
+            time.sleep(delay)
+            try:
+                job = self.session.get(location, timeout=(30, 120))
+            except TRANSIENT_POLL_EXCEPTIONS as exc:
+                transient_failures += 1
+                if transient_failures > MAX_TRANSIENT_POLL_FAILURES:
+                    raise RuntimeError("Notebook job polling remained unavailable.") from exc
+                delay = min(2 ** transient_failures, 30)
+                continue
+            if job.status_code >= 400:
+                raise RuntimeError(f"Notebook job polling failed: {job.status_code} {job.text}")
+            payload = job.json()
+            status = payload.get("status")
+            if status in {"Completed", "Succeeded"}:
+                return payload
+            if status in {"Failed", "Cancelled", "Deduped"}:
+                raise RuntimeError(f"Notebook job ended as {status}: {job.text}")
+            transient_failures = 0
+            delay = self.retry_after_seconds(job)
+        raise RuntimeError(f"Notebook job exceeded {MAX_LRO_SECONDS} seconds.")
+
 
 def definition_for(folder: Path, replacements: dict[str, str] | None = None) -> dict | None:
     if not folder.exists():
@@ -176,7 +218,7 @@ def definition_for(folder: Path, replacements: dict[str, str] | None = None) -> 
             continue
         relative = path.relative_to(folder).as_posix()
         content = path.read_bytes()
-        if replacements and path.suffix.lower() in {".tmdl", ".json", ".pbism", ".pbir"}:
+        if replacements and path.suffix.lower() in {".tmdl", ".json", ".pbism", ".pbir", ".py"}:
             text = content.decode("utf-8")
             for placeholder, value in replacements.items():
                 text = text.replace(placeholder, value)
@@ -220,6 +262,121 @@ def direct_lake_replacements(client: Fabric, state: dict, item: dict) -> dict[st
             f"Direct Lake source {source_display_name} must be recorded exactly once before deploying {item['displayName']}."
         )
     return extract_direct_lake_binding(client.get_lakehouse(matches[0]["id"]))
+
+
+def owned_item(state: dict, display_name: str, item_type: str) -> dict:
+    matches = [
+        item for item in state["items"]
+        if item["displayName"] == display_name and item["type"] == item_type
+    ]
+    if len(matches) != 1:
+        raise RuntimeError(f"Owned {item_type} {display_name} must be recorded exactly once.")
+    return matches[0]
+
+
+def notebook_replacements(state: dict, item: dict, workspace_id: str) -> dict[str, str] | None:
+    lakehouse_name = item.get("defaultLakehouseDisplayName")
+    if not lakehouse_name:
+        return None
+    lakehouse = owned_item(state, lakehouse_name, "Lakehouse")
+    return {
+        "<FABRIC_WORKSPACE_ID>": workspace_id,
+        "<FABRIC_LAKEHOUSE_ID>": lakehouse["id"],
+    }
+
+
+def onelake_file_system(workspace_id: str):
+    service = DataLakeServiceClient(account_url=ONELAKE_DFS_URL, credential=credential())
+    return service.get_file_system_client(workspace_id)
+
+
+def ensure_onelake_directory(file_system, path: str) -> None:
+    current = ""
+    for segment in path.split("/"):
+        current = f"{current}/{segment}".strip("/")
+        try:
+            file_system.get_directory_client(current).create_directory()
+        except ResourceExistsError:
+            pass
+
+
+def generated_fixture_uploads(lakehouse_id: str) -> list[tuple[Path, str]]:
+    generated = ROOT / "data" / "generated"
+    local_files = [
+        *sorted((generated / "sql").glob("*.csv")),
+        generated / "cosmos" / "property_profiles.json",
+        generated / "cosmos" / "property_profiles.jsonl",
+        generated / "adls" / "assessment_appeals.json",
+        generated / "adls" / "assessment_appeals.parquet",
+    ]
+    uploads = []
+    for local_path in local_files:
+        source_kind = local_path.parent.name
+        remote_path = (
+            f"{lakehouse_id}/Files/landing/property-assessment/"
+            f"{source_kind}/{local_path.name}"
+        )
+        uploads.append((local_path, remote_path))
+    return uploads
+
+
+def upload_generated_fixtures(workspace_id: str, lakehouse_id: str) -> list[str]:
+    file_system = onelake_file_system(workspace_id)
+    uploaded = []
+    for local_path, remote_path in generated_fixture_uploads(lakehouse_id):
+        if not local_path.exists():
+            raise RuntimeError(f"Generated fixture is missing: {local_path}")
+        ensure_onelake_directory(file_system, remote_path.rsplit("/", 1)[0])
+        file_system.get_file_client(remote_path).upload_data(
+            local_path.read_bytes(),
+            overwrite=True,
+        )
+        uploaded.append(remote_path)
+    return uploaded
+
+
+def verify_gold_tables(workspace_id: str, lakehouse_id: str) -> dict[str, str]:
+    file_system = onelake_file_system(workspace_id)
+    found = {}
+    for table in GOLD_TABLES:
+        candidates = (
+            f"{lakehouse_id}/Tables/{table}/_delta_log",
+            f"{lakehouse_id}/Tables/dbo/{table}/_delta_log",
+        )
+        for candidate in candidates:
+            try:
+                file_system.get_directory_client(candidate).get_directory_properties()
+            except ResourceNotFoundError:
+                continue
+            found[table] = candidate
+            break
+    missing = [table for table in GOLD_TABLES if table not in found]
+    if missing:
+        raise RuntimeError(
+            "Gold readiness failed; missing Delta tables: "
+            + ", ".join(missing)
+            + ". Upload fixtures and run PropertyAssessmentMedallion first."
+        )
+    return found
+
+
+def wait_for_gold_tables(
+    workspace_id: str,
+    lakehouse_id: str,
+    timeout_seconds: int = 600,
+    interval_seconds: int = 15,
+) -> dict[str, str]:
+    deadline = time.monotonic() + timeout_seconds
+    last_error = None
+    while time.monotonic() < deadline:
+        try:
+            return verify_gold_tables(workspace_id, lakehouse_id)
+        except RuntimeError as exc:
+            last_error = exc
+            time.sleep(interval_seconds)
+    raise RuntimeError(
+        f"Gold tables were not ready within {timeout_seconds} seconds: {last_error}"
+    )
 
 
 def persist_state(state_path: Path, state: dict) -> None:
@@ -414,8 +571,23 @@ def main() -> None:
             raise RuntimeError(
                 f"An indeterminate accepted operation exists for {key}. Run --discover and wait for reconciliation before retrying create."
             )
-        replacements = direct_lake_replacements(client, state, item)
-        definition = definition_for(ROOT / item["source"], replacements=replacements)
+        replacements = {}
+        notebook_binding = notebook_replacements(state, item, workspace_id)
+        if notebook_binding:
+            replacements.update(notebook_binding)
+        direct_lake_binding = direct_lake_replacements(client, state, item)
+        if direct_lake_binding:
+            source = owned_item(state, item["directLakeSourceDisplayName"], "Lakehouse")
+            try:
+                verify_gold_tables(workspace_id, source["id"])
+            except RuntimeError as exc:
+                print(f"deferred {item['type']}: {item['displayName']} ({exc})")
+                continue
+            replacements.update(direct_lake_binding)
+        definition = definition_for(
+            ROOT / item["source"],
+            replacements=replacements or None,
+        )
         if owned:
             if definition and item["type"] != "Warehouse":
                 client.update_definition(owned["id"], definition)

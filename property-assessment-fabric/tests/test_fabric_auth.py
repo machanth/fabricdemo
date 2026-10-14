@@ -5,6 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from azure.core.exceptions import ResourceNotFoundError
 from azure.identity import AzureCliCredential, ClientSecretCredential
 from requests.exceptions import ReadTimeout
 
@@ -311,3 +312,111 @@ def test_semantic_definition_stages_live_direct_lake_values_in_memory():
     assert "<FABRIC_SQL_" not in staged
     assert "<FABRIC_SQL_ENDPOINT>" in committed
     assert "<FABRIC_SQL_DATABASE>" in committed
+
+
+def test_notebook_definition_stages_owned_lakehouse_binding_in_memory():
+    config = json.loads((ROOT / "config" / "lab.json").read_text(encoding="utf-8"))
+    notebook_item = next(item for item in config["items"] if item["type"] == "Notebook")
+    state = {
+        "items": [
+            {
+                "id": "f4aa015d-1eb8-4ca3-8c5e-6119300f819b",
+                "displayName": "PropertyAssessmentLakehouse",
+                "type": "Lakehouse",
+            }
+        ]
+    }
+    replacements = fabric_deploy.notebook_replacements(
+        state,
+        notebook_item,
+        "930bbe6f-b256-46b7-a70e-f3dcab99d2c9",
+    )
+    definition = fabric_deploy.definition_for(
+        ROOT / notebook_item["source"],
+        replacements=replacements,
+    )
+    notebook_part = next(
+        part for part in definition["parts"] if part["path"] == "notebook-content.py"
+    )
+    staged = base64.b64decode(notebook_part["payload"]).decode("utf-8")
+
+    assert "<FABRIC_" not in staged
+    assert "f4aa015d-1eb8-4ca3-8c5e-6119300f819b" in staged
+    assert "930bbe6f-b256-46b7-a70e-f3dcab99d2c9" in staged
+
+
+def test_generated_fixture_upload_paths_are_deterministic():
+    uploads = fabric_deploy.generated_fixture_uploads("lakehouse-id")
+    remote_paths = [remote for _local, remote in uploads]
+
+    assert remote_paths == [
+        "lakehouse-id/Files/landing/property-assessment/sql/assessments.csv",
+        "lakehouse-id/Files/landing/property-assessment/sql/buildings.csv",
+        "lakehouse-id/Files/landing/property-assessment/sql/parcels.csv",
+        "lakehouse-id/Files/landing/property-assessment/sql/sales.csv",
+        "lakehouse-id/Files/landing/property-assessment/cosmos/property_profiles.json",
+        "lakehouse-id/Files/landing/property-assessment/cosmos/property_profiles.jsonl",
+        "lakehouse-id/Files/landing/property-assessment/adls/assessment_appeals.json",
+        "lakehouse-id/Files/landing/property-assessment/adls/assessment_appeals.parquet",
+    ]
+
+
+def test_verify_gold_tables_accepts_default_schema_paths(monkeypatch):
+    class Directory:
+        def __init__(self, path):
+            self.path = path
+
+        def get_directory_properties(self):
+            if "/Tables/dbo/" not in self.path:
+                raise ResourceNotFoundError("not found")
+            return {"path": self.path}
+
+    file_system = SimpleNamespace(
+        get_directory_client=lambda path: Directory(path)
+    )
+    monkeypatch.setattr(fabric_deploy, "onelake_file_system", lambda _workspace: file_system)
+
+    result = fabric_deploy.verify_gold_tables("workspace-id", "lakehouse-id")
+
+    assert set(result) == set(fabric_deploy.GOLD_TABLES)
+    assert all("/Tables/dbo/" in path for path in result.values())
+
+
+def test_run_notebook_submits_job_and_polls_completed(monkeypatch):
+    calls = {}
+
+    class Session:
+        def post(self, url, json, timeout):
+            calls["post"] = (url, json, timeout)
+            return SimpleNamespace(
+                status_code=202,
+                headers={"Location": "https://job.example/instance", "Retry-After": "1"},
+                content=b"",
+                text="",
+            )
+
+        def get(self, url, timeout):
+            calls["get"] = (url, timeout)
+            return SimpleNamespace(
+                status_code=200,
+                headers={},
+                text='{"status":"Completed"}',
+                json=lambda: {"status": "Completed"},
+            )
+
+    client = fabric_deploy.Fabric.__new__(fabric_deploy.Fabric)
+    client.api_base = "https://api.fabric.microsoft.com/v1"
+    client.workspace_id = "workspace-id"
+    client.session = Session()
+    monotonic_values = iter([0, 1])
+    monkeypatch.setattr(fabric_deploy.time, "monotonic", lambda: next(monotonic_values))
+    monkeypatch.setattr(fabric_deploy.time, "sleep", lambda _seconds: None)
+
+    result = client.run_notebook("notebook-id")
+
+    assert result["status"] == "Completed"
+    assert calls["post"][0].endswith(
+        "/workspaces/workspace-id/items/notebook-id/jobs/instances?jobType=RunNotebook"
+    )
+    assert calls["post"][1] == {"executionData": {}}
+    assert calls["get"] == ("https://job.example/instance", (30, 120))

@@ -39,7 +39,7 @@ if ([version]$version -lt [version]"3.10") {
 }
 Write-Host "[ok] Python $version"
 
-& python -c "import duckdb, jsonschema, pyarrow, requests, azure.identity"
+& python -c "import duckdb, jsonschema, pyarrow, requests, azure.identity, azure.storage.filedatalake"
 if ($LASTEXITCODE -ne 0) {
     throw "Python dependencies are missing. Run: python -m pip install -r `"$root\requirements.txt`""
 }

@@ -76,6 +76,7 @@ def validate_artifacts() -> None:
         "fabric/Property Assessment Ontology.Ontology/definition/model.tmdl",
         "fabric/Assessment Semantic Agent.DataAgent/Files/Config/data_agent.json",
         "fabric/Assessment Ontology Agent.DataAgent/Files/Config/data_agent.json",
+        "scripts/prepare_gold.py",
         "docs/08-governance-operations.md"
     ]
     missing = [relative for relative in required if not (ROOT / relative).exists()]
@@ -96,6 +97,9 @@ def validate_artifacts() -> None:
         fail("Fabric notebook source must contain exactly six serialized cells.")
     if notebook_text.count("# METADATA ********************") != 7:
         fail("Fabric notebook source must contain notebook metadata plus metadata for all six cells.")
+    for placeholder in ("<FABRIC_WORKSPACE_ID>", "<FABRIC_LAKEHOUSE_ID>"):
+        if placeholder not in notebook_text:
+            fail(f"Notebook source is missing deployment placeholder {placeholder}")
     for path in ROOT.rglob("*.json"):
         json.loads(path.read_text(encoding="utf-8"))
     for path in ROOT.rglob("*.tmdl"):
@@ -178,6 +182,9 @@ def validate_artifacts() -> None:
     semantic_items = [item for item in config["items"] if item["type"] == "SemanticModel"]
     if len(semantic_items) != 1 or semantic_items[0].get("directLakeSourceDisplayName") != "PropertyAssessmentLakehouse":
         fail("Semantic model must resolve its Direct Lake binding from the owned Lakehouse.")
+    notebook_items = [item for item in config["items"] if item["type"] == "Notebook"]
+    if len(notebook_items) != 1 or notebook_items[0].get("defaultLakehouseDisplayName") != "PropertyAssessmentLakehouse":
+        fail("Notebook must resolve its default binding from the owned Lakehouse.")
     display_names = [item["displayName"] for item in config["items"]]
     if len(display_names) != len(set(display_names)):
         fail("Fabric item display names must be unique.")

@@ -57,8 +57,8 @@ Pass only when preflight, validation, and tests succeed. Copy `.env.example` to 
 |---|---|---|---|
 | [0](docs/00-foundation.md) | Prove tools, auth design, configuration, and ownership safety. `.\scripts\preflight.ps1` | Which actions require workspace Admin versus Contributor? | Screenshot/console output showing local preflight pass; explain `.state` ownership guard. |
 | [1](docs/01-synthetic-data.md) | Generate credible multi-source data. `python .\scripts\generate_data.py --scale 240 --seed 20261013` | Which classes have the widest assessment-to-sale ratios? | `data/generated/manifest.json`, validation pass, expected counts 240/480/80/240/300. |
-| [2](docs/02-onelake-sources.md) | Deploy/seed sources, create Fabric connections/shortcuts, inspect Files. `.\scripts\deploy_sources.ps1 -PlanOnly` | Compare JSON nesting, relational keys, and Parquet schema. | Connection/shortcut screenshots or a documented access blocker; no secrets. |
-| [3](docs/03-lakehouse.md) | Deploy and run Bronze/Silver/Gold notebook. `python .\scripts\fabric_deploy.py` | Find nulls, duplicates, unknown `parcelId`s, and enrichment opportunities. | Five Gold Delta tables plus zero failed assertions. |
+| [2](docs/02-onelake-sources.md) | Upload deterministic fixtures to owned OneLake Files with `python .\scripts\prepare_gold.py` after core items exist; optionally deploy Azure sources/shortcuts. | Compare JSON nesting, relational keys, and Parquet schema in Files. | Uploaded-path evidence or a documented access blocker; no secrets. |
+| [3](docs/03-lakehouse.md) | `prepare_gold.py` binds/updates and runs `PropertyAssessmentMedallion`, then verifies Delta logs. | Find nulls, duplicates, unknown `parcelId`s, and enrichment opportunities. | Job completion evidence and five Gold Delta tables. |
 | [4](docs/04-warehouse.md) | Create `PropertyAssessmentWarehouse` and run `fabric/Property Assessment Warehouse/deploy.sql`. | Query neighborhood equity and appeal resolution. | Object explorer plus three successful exploration queries. |
 | [5](docs/05-semantic-model.md) | Bind Direct Lake source IDs, deploy TMDL/PBIR, test measures and RLS. | Compare ResidentialReviewer and CommercialReviewer. | Model diagram, measure results, two persona screenshots. |
 | [6](docs/06-ontology.md) | Deploy Gen2 shell where REST preview is enabled; bind Gold entities in UI. | Explain Parcel -> Assessment and Parcel -> Appeal. | Ontology readback or precise preview/access blocker plus binding screenshot. |
@@ -89,6 +89,12 @@ The deployment script deliberately refuses unowned name collisions and does not 
 python .\scripts\fabric_deploy.py --dry-run
 python .\scripts\fabric_deploy.py
 
+# After Lakehouse + Notebook exist: upload fixtures, bind, run, verify Gold.
+python .\scripts\prepare_gold.py
+
+# Rerun deployment; the semantic model is deferred until Gold is ready.
+python .\scripts\fabric_deploy.py
+
 # Only after confirming Ontology/Data Agent preview availability:
 python .\scripts\fabric_deploy.py --include-preview
 ```
@@ -114,6 +120,8 @@ The service principal must be allowed to use Fabric APIs in tenant settings and 
 
 Run `PropertyAssessmentMedallion` before expecting the Direct Lake model to frame or answer queries: `dim_property`, `dim_date`, `fact_assessment`, `fact_sale`, and `fact_appeal` must exist in the Lakehouse SQL endpoint.
 
+`prepare_gold.py` is idempotent: it overwrites the same synthetic fixture paths through the official OneLake DFS endpoint, stages the owned workspace/Lakehouse IDs into the notebook definition in memory, updates the owned notebook, submits `RunNotebook`, polls the Fabric job, and waits for all five Delta `_delta_log` directories. It writes only nonsecret evidence to `.state/gold-readiness.json`.
+
 `--discover` is read-only. It reports exact display-name/type matches, item IDs, ownership-state membership, the deployment marker, and pending LRO identities. A normal deploy safely adopts a single unrecorded exact match only when its description exactly equals the lab's deployment marker. Multiple matches or an unmarked match fail without modification. Accepted LRO identity is persisted before polling; transient connect/read/SSL polling failures use bounded backoff and Fabric `Retry-After`.
 
 Before creating anything, a normal deploy rechecks every persisted `Accepted` operation. A terminal Fabric `Failed`/`Cancelled` result is marked failed in ownership state and no longer blocks a safe retry; an unreachable or still-running operation remains accepted and blocks duplicate creation.
@@ -124,6 +132,7 @@ Before creating anything, a normal deploy rechecks every persisted `Accepted` op
 - Item collision: rename the existing item or explicitly reconcile `.state/owned-items.json`; never adopt by name automatically.
 - Timed-out create: run `python .\scripts\fabric_deploy.py --discover` first. Rerun deployment only when discovery shows one `managedMarker: true` match (safe adoption) or no match and no accepted pending operation.
 - Notebook cannot find Files: attach the Lakehouse and upload/copy generated folders to `Files/landing/property-assessment`.
+- Semantic model is deferred: run `python .\scripts\prepare_gold.py`; inspect its uploaded Files, notebook job status, and missing-table message before retrying deployment.
 - Direct Lake error: replace the semantic model expression placeholder by connecting the model to the deployed Lakehouse SQL analytics endpoint.
 - Ontology/Data Agent rejected: confirm tenant preview availability and use the exact UI steps in Steps 6-7.
 - Warehouse tables empty: schema creation and data loading are separate; use a pipeline or `COPY INTO` from Lakehouse-exported Parquet.
