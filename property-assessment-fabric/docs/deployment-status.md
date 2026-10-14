@@ -4,10 +4,11 @@ Checked on 2026-10-13 against target workspace `MaddysWS` (`930bbe6f-b256-46b7-a
 
 - Local data generation: **passed** at scale 240 and seed 20261013.
 - Contract/artifact validation: **passed**.
-- Unit tests: **12 passed**, including display-name policy, LRO timeout retry, read-only discovery, accepted-operation persistence shape, client-credential selection, and authorization-header safety.
+- Unit tests: **13 passed**, including empty-202 handling, display-name policy, LRO timeout retry, read-only discovery, accepted-operation persistence shape, client-credential selection, and authorization-header safety.
 - Fabric deployment dry run: **passed**; four automatable non-preview items selected. The thin PBIR report is source controlled but intentionally manual until its semantic-model binding is materialized.
 - Live Fabric authentication/readback: **client-credential authentication succeeded in the parent session**. The first create request failed before an item was created: `POST /v1/workspaces/930bbe6f-b256-46b7-a70e-f3dcab99d2c9/items` returned HTTP 400, request ID `258759b8-094f-4b80-bba5-83972454e223`, `InvalidInput / InvalidParameter`, because `Property Assessment` was invalid for the Lakehouse display name. All configured Fabric display names are now unique alphanumeric identifiers without spaces, and validation rejects regressions before an API call.
 - Second live attempt: authentication/preflight passed and the create entered long-running-operation polling. The redirect-host poll timed out after 120 seconds, so creation is **indeterminate**. The deployer now retries transient connect/read/SSL poll failures with bounded backoff, follows `Retry-After`, records accepted operation identity before polling, and reconciles exact live matches before any create.
+- Third live attempt: Fabric returned HTTP 202 with an empty body. The accepted-operation callback treated a `None` JSON payload as an object and failed before state persistence, so creation is again **indeterminate**. Empty 202 bodies are now normalized to `{}` and operation identity is captured from `Location` and operation headers before polling.
 - Azure source deployment: **not attempted**. Azure SQL, Cosmos DB, and ADLS provisioning remains separate and still requires Azure CLI.
 
 Exact noninteractive sequence after the parent process injects `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, and `AZURE_CLIENT_SECRET`:

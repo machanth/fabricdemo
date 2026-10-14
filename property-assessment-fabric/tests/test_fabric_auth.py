@@ -136,6 +136,24 @@ def test_accepted_operation_captures_identity_without_secret():
     assert "secret" not in json.dumps(operation).lower()
 
 
+def test_accepted_operation_handles_empty_202_body():
+    response = SimpleNamespace(
+        content=b"",
+        headers={
+            "Location": "https://operation.example/operations/header-operation-id",
+            "x-ms-operation-id": "header-operation-id",
+        },
+        json=lambda: None,
+    )
+    item = {"displayName": "PropertyAssessmentLakehouse", "type": "Lakehouse"}
+
+    operation = fabric_deploy.accepted_operation(response, item)
+
+    assert operation["operationId"] == "header-operation-id"
+    assert operation["operationLocation"] == response.headers["Location"]
+    assert "itemId" not in operation
+
+
 def test_create_resolves_lro_result_by_exact_name_and_type():
     client = fabric_deploy.Fabric.__new__(fabric_deploy.Fabric)
     client.workspace_id = "workspace-id"

@@ -238,7 +238,7 @@ def accepted_operation(response: requests.Response, item: dict) -> dict:
         "acceptedAt": datetime.now(timezone.utc).isoformat(),
     }
     try:
-        payload = response.json()
+        payload = response.json() or {}
     except (ValueError, AttributeError):
         payload = {}
     early_item_id = payload.get("itemId") or payload.get("id")
