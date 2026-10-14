@@ -221,3 +221,20 @@ def test_notebook_uses_exact_fabric_git_source_prologue():
         b"# Fabric notebook source\n\n# METADATA ********************\n"
     )
     assert b"\r\n" not in notebook
+
+
+def test_semantic_model_pbism_uses_supported_minimal_schema():
+    definition = json.loads(
+        (
+            ROOT
+            / "fabric"
+            / "Property Assessment Model.SemanticModel"
+            / "definition.pbism"
+        ).read_text(encoding="utf-8")
+    )
+
+    assert definition == {
+        "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/semanticModel/definitionProperties/1.0.0/schema.json",
+        "version": "5.0",
+        "settings": {"qnaEnabled": True},
+    }

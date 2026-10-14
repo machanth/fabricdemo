@@ -109,6 +109,16 @@ def validate_artifacts() -> None:
     report_definition = json.loads((ROOT / "fabric" / "Property Assessment Overview.Report" / "definition.pbir").read_text(encoding="utf-8"))
     if report_definition.get("version") != "4.0" or "datasetReference" not in report_definition:
         fail("PBIR definition is missing version 4.0 or datasetReference.")
+    semantic_model_definition = json.loads(
+        (ROOT / "fabric" / "Property Assessment Model.SemanticModel" / "definition.pbism").read_text(encoding="utf-8")
+    )
+    expected_pbism = {
+        "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/semanticModel/definitionProperties/1.0.0/schema.json",
+        "version": "5.0",
+        "settings": {"qnaEnabled": True},
+    }
+    if semantic_model_definition != expected_pbism:
+        fail("definition.pbism must match the supported minimal schema; unsupported settings are forbidden.")
     config = json.loads((ROOT / "config" / "lab.json").read_text(encoding="utf-8"))
     if config["workspace"]["id"] != "930bbe6f-b256-46b7-a70e-f3dcab99d2c9":
         fail("Target workspace ID changed unexpectedly.")
