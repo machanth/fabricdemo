@@ -102,6 +102,7 @@ $env:FABRIC_WORKSPACE_ID = "930bbe6f-b256-46b7-a70e-f3dcab99d2c9"
 # AZURE_TENANT_ID, AZURE_CLIENT_ID, and AZURE_CLIENT_SECRET must already be
 # injected into this process by the caller.
 .\scripts\preflight.ps1 -RequireFabricAccess
+python .\scripts\fabric_deploy.py --discover
 python .\scripts\fabric_deploy.py
 python .\scripts\fabric_deploy.py --verify
 Remove-Item Env:AZURE_CLIENT_SECRET -ErrorAction SilentlyContinue
@@ -109,10 +110,13 @@ Remove-Item Env:AZURE_CLIENT_SECRET -ErrorAction SilentlyContinue
 
 The service principal must be allowed to use Fabric APIs in tenant settings and have Contributor or Admin access to `MaddysWS`. The workspace must already be assigned to an eligible Fabric capacity. Source-specific values are still required after item creation: Lakehouse landing path `Files/landing/property-assessment`, Lakehouse/SQL endpoint binding for the semantic model, and environment-specific semantic model/ontology item IDs for Data Agents. Azure SQL, Cosmos DB, and ADLS provisioning remains an Azure CLI workflow.
 
+`--discover` is read-only. It reports exact display-name/type matches, item IDs, ownership-state membership, the deployment marker, and pending LRO identities. A normal deploy safely adopts a single unrecorded exact match only when its description exactly equals the lab's deployment marker. Multiple matches or an unmarked match fail without modification. Accepted LRO identity is persisted before polling; transient connect/read/SSL polling failures use bounded backoff and Fabric `Retry-After`.
+
 ## Troubleshooting quick map
 
 - `401/403` from Fabric: confirm the service principal tenant setting and workspace role, or confirm `az account get-access-token --resource https://api.fabric.microsoft.com`; also verify capacity assignment.
 - Item collision: rename the existing item or explicitly reconcile `.state/owned-items.json`; never adopt by name automatically.
+- Timed-out create: run `python .\scripts\fabric_deploy.py --discover` first. Rerun deployment only when discovery shows one `managedMarker: true` match (safe adoption) or no match and no accepted pending operation.
 - Notebook cannot find Files: attach the Lakehouse and upload/copy generated folders to `Files/landing/property-assessment`.
 - Direct Lake error: replace the semantic model expression placeholder by connecting the model to the deployed Lakehouse SQL analytics endpoint.
 - Ontology/Data Agent rejected: confirm tenant preview availability and use the exact UI steps in Steps 6-7.

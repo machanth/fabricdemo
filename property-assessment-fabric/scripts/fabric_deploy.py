@@ -7,10 +7,12 @@ import os
 import re
 import shutil
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
 from azure.identity import AzureCliCredential, ClientSecretCredential, DefaultAzureCredential
+from requests.exceptions import ConnectTimeout, ReadTimeout, SSLError
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,6 +20,10 @@ FABRIC_SCOPE = "https://api.fabric.microsoft.com/.default"
 TEXT_EXCLUDES = {"README.md", "deploy.sql"}
 CLIENT_CREDENTIAL_ENV_VARS = ("AZURE_TENANT_ID", "AZURE_CLIENT_ID", "AZURE_CLIENT_SECRET")
 SAFE_DISPLAY_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9]{2,127}$")
+MANAGED_DESCRIPTION = "Fictional property-assessment hackathon lab; managed by property-assessment-fabric."
+TRANSIENT_POLL_EXCEPTIONS = (ConnectTimeout, ReadTimeout, SSLError)
+MAX_TRANSIENT_POLL_FAILURES = 8
+MAX_LRO_SECONDS = 900
 
 
 def credential_mode() -> str:
@@ -73,22 +79,50 @@ class Fabric:
         self.session = requests.Session()
         self.session.headers.update({"Authorization": f"Bearer {token()}", "Content-Type": "application/json"})
 
-    def request(self, method: str, path: str, **kwargs) -> requests.Response:
+    @staticmethod
+    def retry_after_seconds(response: requests.Response, default: int = 5) -> int:
+        value = response.headers.get("Retry-After")
+        if value and value.isdigit():
+            return max(1, min(int(value), 60))
+        return default
+
+    def poll_operation(self, location: str, retry_after: int = 5) -> dict:
+        deadline = time.monotonic() + MAX_LRO_SECONDS
+        transient_failures = 0
+        delay = max(1, min(retry_after, 60))
+        while time.monotonic() < deadline:
+            time.sleep(delay)
+            try:
+                operation = self.session.get(location, timeout=(30, 120))
+            except TRANSIENT_POLL_EXCEPTIONS as exc:
+                transient_failures += 1
+                if transient_failures > MAX_TRANSIENT_POLL_FAILURES:
+                    raise RuntimeError(
+                        f"Fabric operation polling remained unavailable after {transient_failures} transient failures."
+                    ) from exc
+                delay = min(2 ** transient_failures, 30)
+                continue
+            if operation.status_code >= 400:
+                raise RuntimeError(f"Fabric operation failed: {operation.status_code} {operation.text}")
+            payload = operation.json()
+            status = payload.get("status")
+            if status in {"Succeeded", "Failed", "Cancelled"}:
+                if status != "Succeeded":
+                    raise RuntimeError(f"Fabric operation ended as {status}: {operation.text}")
+                return payload
+            transient_failures = 0
+            delay = self.retry_after_seconds(operation)
+        raise RuntimeError(f"Fabric operation polling exceeded {MAX_LRO_SECONDS} seconds.")
+
+    def request(self, method: str, path: str, on_accepted=None, **kwargs) -> requests.Response:
         response = self.session.request(method, f"{self.api_base}{path}", timeout=120, **kwargs)
         if response.status_code == 202:
             location = response.headers.get("Location")
-            retry_after = int(response.headers.get("Retry-After", "5"))
-            while location:
-                time.sleep(retry_after)
-                operation = self.session.get(location, timeout=120)
-                if operation.status_code >= 400:
-                    raise RuntimeError(f"Fabric operation failed: {operation.status_code} {operation.text}")
-                payload = operation.json()
-                if payload.get("status") in {"Succeeded", "Failed", "Cancelled"}:
-                    if payload["status"] != "Succeeded":
-                        raise RuntimeError(f"Fabric operation ended as {payload['status']}: {operation.text}")
-                    break
-                retry_after = int(operation.headers.get("Retry-After", "5"))
+            if not location:
+                raise RuntimeError("Fabric returned HTTP 202 without an operation Location header.")
+            if on_accepted:
+                on_accepted(response)
+            self.poll_operation(location, self.retry_after_seconds(response))
             return response
         if response.status_code >= 400:
             raise RuntimeError(f"Fabric API {method} {path} failed: {response.status_code} {response.text}")
@@ -100,13 +134,23 @@ class Fabric:
     def get_workspace(self) -> dict:
         return self.request("GET", f"/workspaces/{self.workspace_id}").json()
 
-    def create(self, item: dict, definition: dict | None) -> dict:
-        body = {"displayName": item["displayName"], "type": item["type"], "description": "Fictional property-assessment hackathon lab; managed by property-assessment-fabric."}
+    def get_item(self, item_id: str) -> dict:
+        return self.request("GET", f"/workspaces/{self.workspace_id}/items/{item_id}").json()
+
+    def create(self, item: dict, definition: dict | None, on_accepted=None) -> dict:
+        body = {"displayName": item["displayName"], "type": item["type"], "description": MANAGED_DESCRIPTION}
         if definition:
             body["definition"] = definition
-        response = self.request("POST", f"/workspaces/{self.workspace_id}/items", json=body)
-        if response.content:
-            return response.json()
+        response = self.request(
+            "POST",
+            f"/workspaces/{self.workspace_id}/items",
+            json=body,
+            on_accepted=on_accepted,
+        )
+        if response.status_code != 202 and response.content:
+            payload = response.json()
+            if payload.get("id"):
+                return payload
         matches = [candidate for candidate in self.list_items() if candidate["displayName"] == item["displayName"] and candidate["type"] == item["type"]]
         if len(matches) != 1:
             raise RuntimeError(f"Unable to resolve created item {item['displayName']}.")
@@ -128,19 +172,100 @@ def definition_for(folder: Path) -> dict | None:
     return {"parts": parts} if parts else None
 
 
+def persist_state(state_path: Path, state: dict) -> None:
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = state_path.with_suffix(".tmp")
+    temporary.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(state_path)
+
+
+def is_managed_item(client: Fabric, item: dict) -> bool:
+    if item.get("description") == MANAGED_DESCRIPTION:
+        return True
+    detail = client.get_item(item["id"])
+    return detail.get("description") == MANAGED_DESCRIPTION
+
+
+def discovery_report(config: dict, state: dict, existing: list[dict], client: Fabric) -> dict:
+    owned_ids = {item["id"] for item in state["items"]}
+    results = []
+    for configured in config["items"]:
+        matches = [
+            item
+            for item in existing
+            if item["displayName"] == configured["displayName"] and item["type"] == configured["type"]
+        ]
+        reported_matches = []
+        for match in matches:
+            reported_matches.append(
+                {
+                    "id": match["id"],
+                    "displayName": match["displayName"],
+                    "type": match["type"],
+                    "recordedOwned": match["id"] in owned_ids,
+                    "managedMarker": is_managed_item(client, match),
+                }
+            )
+        results.append(
+            {
+                "configuredDisplayName": configured["displayName"],
+                "type": configured["type"],
+                "matchCount": len(matches),
+                "matches": reported_matches,
+            }
+        )
+    return {
+        "workspaceId": client.workspace_id,
+        "readOnly": True,
+        "configuredItems": results,
+        "pendingOperations": state["operations"],
+    }
+
+
+def accepted_operation(response: requests.Response, item: dict) -> dict:
+    location = response.headers["Location"]
+    operation_id = (
+        response.headers.get("x-ms-operation-id")
+        or response.headers.get("requestId")
+        or location.rstrip("/").rsplit("/", 1)[-1]
+    )
+    record = {
+        "operationId": operation_id,
+        "operationLocation": location,
+        "displayName": item["displayName"],
+        "type": item["type"],
+        "status": "Accepted",
+        "acceptedAt": datetime.now(timezone.utc).isoformat(),
+    }
+    try:
+        payload = response.json()
+    except (ValueError, AttributeError):
+        payload = {}
+    early_item_id = payload.get("itemId") or payload.get("id")
+    if early_item_id and early_item_id != operation_id:
+        record["itemId"] = early_item_id
+    return record
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Idempotently deploy supported Fabric item definitions.")
     parser.add_argument("--include-preview", action="store_true", help="Deploy Ontology and DataAgent preview definitions.")
     operation = parser.add_mutually_exclusive_group()
     operation.add_argument("--dry-run", action="store_true")
     operation.add_argument("--check-access", action="store_true", help="Acquire a token and read the target workspace.")
+    operation.add_argument("--discover", action="store_true", help="Read current exact name/type matches without changing state or items.")
     operation.add_argument("--verify", action="store_true", help="Verify every owned item still exists with the expected type and name.")
     args = parser.parse_args()
     config = json.loads((ROOT / "config" / "lab.json").read_text(encoding="utf-8"))
     workspace_id = os.getenv("FABRIC_WORKSPACE_ID", config["workspace"]["id"])
     api_base = os.getenv("FABRIC_API_BASE", "https://api.fabric.microsoft.com/v1")
     state_path = ROOT / config["ownership"]["stateFile"]
-    state = json.loads(state_path.read_text(encoding="utf-8")) if state_path.exists() else {"workspaceId": workspace_id, "items": []}
+    state = (
+        json.loads(state_path.read_text(encoding="utf-8"))
+        if state_path.exists()
+        else {"workspaceId": workspace_id, "items": [], "operations": []}
+    )
+    state.setdefault("operations", [])
     if state["workspaceId"] != workspace_id:
         raise SystemExit("Ownership state belongs to another workspace; refusing deployment.")
     preview_types = {"Ontology", "DataAgent"}
@@ -154,6 +279,9 @@ def main() -> None:
     if args.check_access:
         workspace = client.get_workspace()
         print(f"Fabric access verified: {workspace.get('displayName', '<unknown>')} ({workspace_id}) using {credential_mode()}.")
+        return
+    if args.discover:
+        print(json.dumps(discovery_report(config, state, client.list_items(), client), indent=2))
         return
     if args.verify:
         if not state["items"]:
@@ -179,20 +307,63 @@ def main() -> None:
         key = (item["displayName"], item["type"])
         collisions = [candidate for candidate in existing if (candidate["displayName"], candidate["type"]) == key]
         owned = owned_by_key.get(key)
+        if len(collisions) > 1:
+            raise RuntimeError(f"Multiple exact matches exist for {key}; run --discover and resolve the ambiguity.")
+        if owned and collisions and collisions[0]["id"] != owned["id"]:
+            raise RuntimeError(f"Owned state and live exact match disagree for {key}; run --discover before changing anything.")
         if collisions and not owned:
-            raise RuntimeError(f"Unowned item collision for {key}; rename or explicitly adopt it before deployment.")
+            candidate = collisions[0]
+            if not is_managed_item(client, candidate):
+                raise RuntimeError(
+                    f"Unowned item collision for {key}. The exact match lacks the deployment marker; "
+                    "run --discover and resolve it manually."
+                )
+            owned = {"id": candidate["id"], "displayName": item["displayName"], "type": item["type"]}
+            state["items"].append(owned)
+            owned_by_key[key] = owned
+            for pending in state["operations"]:
+                if pending["displayName"] == item["displayName"] and pending["type"] == item["type"] and pending["status"] == "Accepted":
+                    pending["status"] = "Reconciled"
+                    pending["itemId"] = candidate["id"]
+            persist_state(state_path, state)
+            print(f"adopted marked {item['type']}: {item['displayName']} ({candidate['id']})")
+        pending_operations = [
+            pending
+            for pending in state["operations"]
+            if pending["displayName"] == item["displayName"]
+            and pending["type"] == item["type"]
+            and pending["status"] == "Accepted"
+        ]
+        if not collisions and not owned and pending_operations:
+            raise RuntimeError(
+                f"An indeterminate accepted operation exists for {key}. Run --discover and wait for reconciliation before retrying create."
+            )
         definition = definition_for(ROOT / item["source"])
         if owned:
             if definition and item["type"] != "Warehouse":
                 client.update_definition(owned["id"], definition)
             print(f"updated {item['type']}: {item['displayName']} ({owned['id']})")
             continue
-        created = client.create(item, None if item["type"] == "Warehouse" else definition)
+        pending_record = None
+
+        def record_accepted(response):
+            nonlocal pending_record
+            pending_record = accepted_operation(response, item)
+            state["operations"].append(pending_record)
+            persist_state(state_path, state)
+
+        created = client.create(
+            item,
+            None if item["type"] == "Warehouse" else definition,
+            on_accepted=record_accepted,
+        )
         record = {"id": created["id"], "displayName": item["displayName"], "type": item["type"]}
         state["items"].append(record)
         owned_by_key[key] = record
-        state_path.parent.mkdir(parents=True, exist_ok=True)
-        state_path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
+        if pending_record:
+            pending_record["status"] = "Succeeded"
+            pending_record["itemId"] = created["id"]
+        persist_state(state_path, state)
         print(f"created {item['type']}: {item['displayName']} ({created['id']})")
     print("Definitions deployed. Run Warehouse/deploy.sql in the Warehouse SQL editor and bind source IDs where placeholders remain.")
 

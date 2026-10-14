@@ -1,9 +1,11 @@
 import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from azure.identity import AzureCliCredential, ClientSecretCredential
+from requests.exceptions import ReadTimeout
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -67,3 +69,85 @@ def test_invalid_fabric_display_name_is_rejected():
         fabric_deploy.validate_display_names(
             [{"displayName": "Property Assessment", "type": "Lakehouse"}]
         )
+
+
+def test_lro_poll_retries_read_timeout(monkeypatch):
+    responses = [
+        ReadTimeout("temporary timeout"),
+        SimpleNamespace(
+            status_code=200,
+            headers={"Retry-After": "1"},
+            text='{"status":"Succeeded"}',
+            json=lambda: {"status": "Succeeded"},
+        ),
+    ]
+
+    class FakeSession:
+        def get(self, _location, timeout):
+            assert timeout == (30, 120)
+            response = responses.pop(0)
+            if isinstance(response, Exception):
+                raise response
+            return response
+
+    client = fabric_deploy.Fabric.__new__(fabric_deploy.Fabric)
+    client.session = FakeSession()
+    monotonic_values = iter([0, 1, 2])
+    monkeypatch.setattr(fabric_deploy.time, "monotonic", lambda: next(monotonic_values))
+    monkeypatch.setattr(fabric_deploy.time, "sleep", lambda _seconds: None)
+
+    assert client.poll_operation("https://operation.example", retry_after=1)["status"] == "Succeeded"
+
+
+def test_discovery_reports_marker_without_modifying_state():
+    item = {
+        "id": "item-id",
+        "displayName": "PropertyAssessmentLakehouse",
+        "type": "Lakehouse",
+        "description": fabric_deploy.MANAGED_DESCRIPTION,
+    }
+    config = {
+        "workspace": {"id": "workspace-id"},
+        "items": [{"displayName": item["displayName"], "type": item["type"]}],
+    }
+    state = {"items": [], "operations": []}
+    client = SimpleNamespace(workspace_id="workspace-id")
+
+    report = fabric_deploy.discovery_report(config, state, [item], client)
+
+    assert report["readOnly"] is True
+    assert report["configuredItems"][0]["matches"][0]["managedMarker"] is True
+    assert state == {"items": [], "operations": []}
+
+
+def test_accepted_operation_captures_identity_without_secret():
+    response = SimpleNamespace(
+        headers={
+            "Location": "https://operation.example/operations/operation-id",
+            "x-ms-operation-id": "operation-id",
+        }
+    )
+    item = {"displayName": "PropertyAssessmentLakehouse", "type": "Lakehouse"}
+
+    operation = fabric_deploy.accepted_operation(response, item)
+
+    assert operation["operationId"] == "operation-id"
+    assert operation["displayName"] == item["displayName"]
+    assert "secret" not in json.dumps(operation).lower()
+
+
+def test_create_resolves_lro_result_by_exact_name_and_type():
+    client = fabric_deploy.Fabric.__new__(fabric_deploy.Fabric)
+    client.workspace_id = "workspace-id"
+    response = SimpleNamespace(status_code=202, content=b'{"status":"Accepted"}')
+    client.request = lambda *args, **kwargs: response
+    client.list_items = lambda: [
+        {
+            "id": "created-id",
+            "displayName": "PropertyAssessmentLakehouse",
+            "type": "Lakehouse",
+        }
+    ]
+    item = {"displayName": "PropertyAssessmentLakehouse", "type": "Lakehouse"}
+
+    assert client.create(item, definition=None)["id"] == "created-id"
