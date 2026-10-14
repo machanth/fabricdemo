@@ -14,4 +14,6 @@ Measures include Total/average assessed value, illustrative estimated tax, sale 
 
 **Explore/checkpoint:** test totals by tax year, drill neighborhood -> parcel, and use **View as** for both roles. Capture the model diagram, measure cards/table, and persona results.
 
-**Troubleshooting:** Direct Lake needs a valid Lakehouse binding; RLS roles require membership assignment in the service; the report is deliberately thin and may need one UI save to materialize visuals in your PBIR version.
+`PropertyAssessmentOverview` is deployed through the supported Report definition API. Its committed `definition.pbir` keeps a semantic-model placeholder; deployment resolves the owned `PropertyAssessmentModel` ID and changes the binding to `byConnection`/`semanticModelId` only in memory. `--verify` reads the Report definition back and confirms the staged model ID is present.
+
+**Troubleshooting:** Direct Lake needs a valid Lakehouse binding; RLS roles require membership assignment in the service; the report is deliberately thin and contains an empty overview page so hackers can build visuals without overwriting a supplied answer.

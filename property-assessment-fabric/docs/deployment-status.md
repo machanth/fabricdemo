@@ -1,11 +1,25 @@
 # Deployment status
 
-Checked on 2026-10-13 against target workspace `MaddysWS` (`930bbe6f-b256-46b7-a70e-f3dcab99d2c9`).
+Checked through 2026-10-14 against target workspace `MaddysWS` (`930bbe6f-b256-46b7-a70e-f3dcab99d2c9`).
+
+## Current confirmed state
+
+- Core Fabric deployment: **succeeded**.
+- OneLake source preparation: **succeeded**; eight deterministic fixture files uploaded beneath the owned Lakehouse at `Files/landing/property-assessment`.
+- Notebook: default Lakehouse binding was staged to workspace `930bbe6f-b256-46b7-a70e-f3dcab99d2c9` and Lakehouse `f4aa015d-1eb8-4ca3-8c5e-6119300f819b`; `RunNotebook` completed.
+- Gold readiness: **passed** for `dim_property`, `dim_date`, `fact_assessment`, `fact_sale`, and `fact_appeal`.
+- Owned/readback core items:
+  - Lakehouse `PropertyAssessmentLakehouse`: `f4aa015d-1eb8-4ca3-8c5e-6119300f819b`
+  - Notebook `PropertyAssessmentMedallion`: `7bff68da-4dfe-472c-8f7e-fbe1de8c51af`
+  - Warehouse `PropertyAssessmentWarehouse`: `67636a76-9180-413b-9c47-183b76612c3d`
+  - Semantic model `PropertyAssessmentModel`: `59badcb1-1b17-4043-867e-302462515677`
+- Remaining live action: run the opt-in preview deployment for the thin Report, minimal Generation 2 Ontology shell, semantic-model Data Agent draft, and ontology Data Agent draft. Source definitions now stage workspace/model/ontology IDs only in memory and `--verify` performs item readback plus `getDefinition`.
+- Warehouse `deploy.sql`: **manual by design**. The generic item-definition REST surface creates the Warehouse item but does not execute arbitrary Warehouse DDL.
 
 - Local data generation: **passed** at scale 240 and seed 20261013.
 - Contract/artifact validation: **passed**.
-- Unit tests: **26 passed**, including OneLake root-protection, RunNotebook submission/polling, OneLake fixture paths, staged notebook binding, Gold-table verification, live Direct Lake binding extraction/in-memory substitution, TMDL description/property validation, folder-discovery validation, strict PBISM schema validation, exact Fabric notebook prologue/LF validation, exclusion of shortcut metadata, terminal-failure reconciliation, empty-202 handling, display-name policy, LRO timeout retry, read-only discovery, accepted-operation persistence shape, client-credential selection, and authorization-header safety.
-- Fabric deployment dry run: **passed**; four automatable non-preview items selected. The thin PBIR report is source controlled but intentionally manual until its semantic-model binding is materialized.
+- Unit tests: **30 passed**, including PBIR live-model staging, schema-valid Data Agent source staging, minimal Ontology payload exclusion, and synchronous definition readback in addition to the existing OneLake, Notebook, Direct Lake, TMDL, PBISM, LRO, ownership, and authentication coverage.
+- Fabric deployment dry run: **passed**; five supported non-preview items and three opt-in preview items selected.
 - Live Fabric authentication/readback: **client-credential authentication succeeded in the parent session**. The first create request failed before an item was created: `POST /v1/workspaces/930bbe6f-b256-46b7-a70e-f3dcab99d2c9/items` returned HTTP 400, request ID `258759b8-094f-4b80-bba5-83972454e223`, `InvalidInput / InvalidParameter`, because `Property Assessment` was invalid for the Lakehouse display name. All configured Fabric display names are now unique alphanumeric identifiers without spaces, and validation rejects regressions before an API call.
 - Second live attempt: authentication/preflight passed and the create entered long-running-operation polling. The redirect-host poll timed out after 120 seconds, so creation is **indeterminate**. The deployer now retries transient connect/read/SSL poll failures with bounded backoff, follows `Retry-After`, records accepted operation identity before polling, and reconciles exact live matches before any create.
 - Third live attempt: Fabric returned HTTP 202 with an empty body. The accepted-operation callback treated a `None` JSON payload as an object and failed before state persistence, so creation is again **indeterminate**. Empty 202 bodies are now normalized to `{}` and operation identity is captured from `Location` and operation headers before polling.
@@ -17,6 +31,7 @@ Checked on 2026-10-13 against target workspace `MaddysWS` (`930bbe6f-b256-46b7-a
 - TMDL then parsed fully, but save failed with `Dataset_Import_FailedToImportDataset`: Direct Lake tables require a SQL or OneLake datasource. The committed expression now uses `Sql.Database("<FABRIC_SQL_ENDPOINT>", "<FABRIC_SQL_DATABASE>")` plus navigation/result annotations. Before semantic create/update, the deployer reads the owned Lakehouse `sqlEndpointProperties`, verifies readiness, and substitutes its connection string and SQL endpoint ID only in the in-memory definition. Every table partition is validated as `directLake` and bound to that shared expression. Gold tables must be created by the notebook before model framing/query succeeds.
 - The automated prerequisite is now `python scripts/prepare_gold.py`: upload generated SQL/Cosmos/ADLS fixtures to deterministic OneLake Files paths, stage the owned workspace/Lakehouse IDs into notebook metadata, update the owned notebook, submit/poll `RunNotebook`, and wait for five Gold Delta logs. Semantic deployment is automatically deferred until live Gold verification passes. Nonsecret evidence is written to `.state/gold-readiness.json`.
 - First live OneLake upload authenticated with the service principal but failed with `OperationNotAllowedOnThePath` because directory creation attempted the Lakehouse artifact root. Directory creation now treats the workspace filesystem, Lakehouse item root, and managed `Files` root as existing protected paths and creates only descendants beginning `{lakehouseId}/Files/landing/...`.
+- Final core retry: eight fixtures uploaded, the bound Notebook job completed, all five Gold Delta tables passed readiness, and `PropertyAssessmentModel` was created/read back as `59badcb1-1b17-4043-867e-302462515677`.
 - Azure source deployment: **not attempted**. Azure SQL, Cosmos DB, and ADLS provisioning remains separate and still requires Azure CLI.
 
 Exact noninteractive sequence after the parent process injects `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, and `AZURE_CLIENT_SECRET`:
@@ -25,7 +40,8 @@ Exact noninteractive sequence after the parent process injects `AZURE_TENANT_ID`
 $env:FABRIC_WORKSPACE_ID = "930bbe6f-b256-46b7-a70e-f3dcab99d2c9"
 .\scripts\preflight.ps1 -RequireFabricAccess
 python .\scripts\fabric_deploy.py --discover
-python .\scripts\fabric_deploy.py
+# Updates core/report and creates or updates the opt-in preview definitions.
+python .\scripts\fabric_deploy.py --include-preview
 python .\scripts\fabric_deploy.py --verify
 Remove-Item Env:AZURE_CLIENT_SECRET -ErrorAction SilentlyContinue
 ```

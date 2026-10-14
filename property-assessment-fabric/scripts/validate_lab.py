@@ -73,9 +73,13 @@ def validate_artifacts() -> None:
         "fabric/Property Assessment Model.SemanticModel/definition.pbism",
         "fabric/Property Assessment Model.SemanticModel/definition/model.tmdl",
         "fabric/Property Assessment Overview.Report/definition.pbir",
-        "fabric/Property Assessment Ontology.Ontology/definition/model.tmdl",
+        "fabric/Property Assessment Overview.Report/definition/pages/PropertyAssessmentOverview/page.json",
+        "fabric/Property Assessment Ontology.Ontology/database.tmdl",
+        "fabric/Property Assessment Ontology.Ontology/design/intended-ontology.json",
         "fabric/Assessment Semantic Agent.DataAgent/Files/Config/data_agent.json",
+        "fabric/Assessment Semantic Agent.DataAgent/Files/Config/draft/semantic_model-PropertyAssessmentModel/datasource.json",
         "fabric/Assessment Ontology Agent.DataAgent/Files/Config/data_agent.json",
+        "fabric/Assessment Ontology Agent.DataAgent/Files/Config/draft/graph-PropertyAssessmentOntology/datasource.json",
         "scripts/prepare_gold.py",
         "docs/08-governance-operations.md"
     ]
@@ -164,8 +168,88 @@ def validate_artifacts() -> None:
         if "mode: directLake" not in content or "expressionSource: PropertyAssessmentLakehouse" not in content:
             fail(f"Direct Lake partition is not bound to the shared expression: {table_path.name}")
     report_definition = json.loads((ROOT / "fabric" / "Property Assessment Overview.Report" / "definition.pbir").read_text(encoding="utf-8"))
-    if report_definition.get("version") != "4.0" or "datasetReference" not in report_definition:
-        fail("PBIR definition is missing version 4.0 or datasetReference.")
+    expected_report_binding = {
+        "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json",
+        "version": "2.0",
+        "datasetReference": {
+            "byConnection": {
+                "connectionString": "semanticModelId=<PROPERTY_ASSESSMENT_SEMANTIC_MODEL_ITEM_ID>"
+            }
+        },
+    }
+    if report_definition != expected_report_binding:
+        fail("PBIR definition must use an in-memory staged semanticModelId connection.")
+    report_root = ROOT / "fabric" / "Property Assessment Overview.Report" / "definition"
+    report_version = json.loads((report_root / "version.json").read_text(encoding="utf-8"))
+    if report_version != {
+        "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/versionMetadata/1.0.0/schema.json",
+        "version": "2.0.0",
+    }:
+        fail("PBIR version metadata does not match the supported schema.")
+    pages = json.loads((report_root / "pages" / "pages.json").read_text(encoding="utf-8"))
+    if (
+        pages.get("$schema")
+        != "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.0.0/schema.json"
+        or pages.get("pageOrder") != ["PropertyAssessmentOverview"]
+        or pages.get("activePageName") != "PropertyAssessmentOverview"
+    ):
+        fail("PBIR page metadata must select the PropertyAssessmentOverview page.")
+    page = json.loads(
+        (report_root / "pages" / "PropertyAssessmentOverview" / "page.json").read_text(encoding="utf-8")
+    )
+    if (
+        page.get("$schema")
+        != "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json"
+        or page.get("name") != "PropertyAssessmentOverview"
+        or page.get("width") != 1280
+        or page.get("height") != 720
+    ):
+        fail("PBIR overview page metadata is incomplete.")
+    ontology_root = ROOT / "fabric" / "Property Assessment Ontology.Ontology"
+    if any(path.is_file() for path in (ontology_root / "definition").rglob("*")):
+        fail("Generation 2 Ontology definition parts must be item-root-relative, not nested under definition/.")
+    if (ontology_root / "database.tmdl").read_text(encoding="utf-8") != "database\n\tcompatibilityLevel: 1000000\n":
+        fail("Ontology must use the supported minimal Generation 2 database definition.")
+    intended_ontology = json.loads((ontology_root / "design" / "intended-ontology.json").read_text(encoding="utf-8"))
+    if not intended_ontology.get("synthetic") or intended_ontology.get("bindingStatus") != "manual-preview":
+        fail("Ontology design must identify synthetic data and manual preview binding.")
+    data_agent_schema = (
+        "https://developer.microsoft.com/json-schemas/fabric/item/dataAgent/"
+        "definition/dataAgent/2.1.0/schema.json"
+    )
+    data_source_schema = (
+        "https://developer.microsoft.com/json-schemas/fabric/item/dataAgent/"
+        "definition/dataSource/1.0.0/schema.json"
+    )
+    agent_expectations = (
+        (
+            "Assessment Semantic Agent.DataAgent",
+            "semantic_model-PropertyAssessmentModel",
+            "semantic_model",
+            "<PROPERTY_ASSESSMENT_SEMANTIC_MODEL_ITEM_ID>",
+        ),
+        (
+            "Assessment Ontology Agent.DataAgent",
+            "graph-PropertyAssessmentOntology",
+            "graph",
+            "<PROPERTY_ASSESSMENT_ONTOLOGY_ITEM_ID>",
+        ),
+    )
+    for folder_name, source_folder, source_type, item_placeholder in agent_expectations:
+        agent_root = ROOT / "fabric" / folder_name / "Files" / "Config"
+        if json.loads((agent_root / "data_agent.json").read_text(encoding="utf-8")) != {"$schema": data_agent_schema}:
+            fail(f"{folder_name} top-level definition must contain only the supported schema.")
+        stage = json.loads((agent_root / "draft" / "stage_config.json").read_text(encoding="utf-8"))
+        if not stage.get("$schema", "").endswith("/stageConfiguration/1.0.0/schema.json") or not stage.get("aiInstructions"):
+            fail(f"{folder_name} draft stage configuration is incomplete.")
+        source = json.loads((agent_root / "draft" / source_folder / "datasource.json").read_text(encoding="utf-8"))
+        if (
+            source.get("$schema") != data_source_schema
+            or source.get("artifactId") != item_placeholder
+            or source.get("workspaceId") != "<FABRIC_WORKSPACE_ID>"
+            or source.get("type") != source_type
+        ):
+            fail(f"{folder_name} data source must use staged workspace/item IDs and the supported source schema.")
     semantic_model_definition = json.loads(
         (ROOT / "fabric" / "Property Assessment Model.SemanticModel" / "definition.pbism").read_text(encoding="utf-8")
     )
@@ -185,6 +269,13 @@ def validate_artifacts() -> None:
     notebook_items = [item for item in config["items"] if item["type"] == "Notebook"]
     if len(notebook_items) != 1 or notebook_items[0].get("defaultLakehouseDisplayName") != "PropertyAssessmentLakehouse":
         fail("Notebook must resolve its default binding from the owned Lakehouse.")
+    report_items = [item for item in config["items"] if item["type"] == "Report"]
+    if (
+        len(report_items) != 1
+        or report_items[0].get("automation") != "rest-definition"
+        or report_items[0].get("semanticModelSourceDisplayName") != "PropertyAssessmentModel"
+    ):
+        fail("Report must deploy through REST with an owned semantic-model binding.")
     display_names = [item["displayName"] for item in config["items"]]
     if len(display_names) != len(set(display_names)):
         fail("Fabric item display names must be unique.")
@@ -198,11 +289,6 @@ def validate_artifacts() -> None:
             platform = json.loads(platform_path.read_text(encoding="utf-8"))
             if platform["metadata"]["displayName"] != item["displayName"]:
                 fail(f".platform display name does not match config for {item['displayName']}")
-        agent_path = source / "Files" / "Config" / "data_agent.json"
-        if agent_path.exists():
-            agent = json.loads(agent_path.read_text(encoding="utf-8"))
-            if agent["name"] != item["displayName"]:
-                fail(f"Data Agent name does not match config for {item['displayName']}")
     tracked_text = "\n".join(
         path.read_text(encoding="utf-8", errors="ignore")
         for path in ROOT.rglob("*")

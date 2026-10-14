@@ -60,16 +60,16 @@ Pass only when preflight, validation, and tests succeed. Copy `.env.example` to 
 | [2](docs/02-onelake-sources.md) | Upload deterministic fixtures to owned OneLake Files with `python .\scripts\prepare_gold.py` after core items exist; optionally deploy Azure sources/shortcuts. | Compare JSON nesting, relational keys, and Parquet schema in Files. | Uploaded-path evidence or a documented access blocker; no secrets. |
 | [3](docs/03-lakehouse.md) | `prepare_gold.py` binds/updates and runs `PropertyAssessmentMedallion`, then verifies Delta logs. | Find nulls, duplicates, unknown `parcelId`s, and enrichment opportunities. | Job completion evidence and five Gold Delta tables. |
 | [4](docs/04-warehouse.md) | Create `PropertyAssessmentWarehouse` and run `fabric/Property Assessment Warehouse/deploy.sql`. | Query neighborhood equity and appeal resolution. | Object explorer plus three successful exploration queries. |
-| [5](docs/05-semantic-model.md) | Bind Direct Lake source IDs, deploy TMDL/PBIR, test measures and RLS. | Compare ResidentialReviewer and CommercialReviewer. | Model diagram, measure results, two persona screenshots. |
+| [5](docs/05-semantic-model.md) | Stage the owned model ID into PBIR, deploy TMDL/report definitions, test measures and RLS. | Compare ResidentialReviewer and CommercialReviewer. | Model/report readback, measure results, two persona screenshots. |
 | [6](docs/06-ontology.md) | Deploy Gen2 shell where REST preview is enabled; bind Gold entities in UI. | Explain Parcel -> Assessment and Parcel -> Appeal. | Ontology readback or precise preview/access blocker plus binding screenshot. |
-| [7](docs/07-data-agents.md) | Replace item-ID placeholders, deploy drafts, test, then publish in UI. | Ask governed, adversarial, and persona-specific prompts. | Prompt transcript with expected shape and synthetic warning. |
+| [7](docs/07-data-agents.md) | Stage owned workspace/source IDs, deploy schema-valid drafts, test, then publish in UI. | Ask governed, adversarial, and persona-specific prompts. | Definition readback plus prompt transcript with expected shape and synthetic warning. |
 | [8](docs/08-governance-operations.md) | Capture lineage/catalog/Purview/metrics evidence and verify/teardown safely. | Identify the heaviest notebook stage and upstream impact. | Evidence pack, item IDs/status codes, and ownership-restricted teardown proof. |
 
 ## Automation boundary
 
-**Automated:** deterministic generation; JSON/Parquet/contract checks; Azure resource shell; identity-based source seeding; Fabric item create/update for definitions; owned-item state; dry run; local tests; owned-item teardown.
+**Automated:** deterministic generation; JSON/Parquet/contract checks; Azure resource shell; identity-based source seeding; OneLake fixture upload; notebook Lakehouse binding/run; Gold readiness; Fabric item create/update for supported definitions; live ID staging for Direct Lake, PBIR, and Data Agent drafts; definition readback verification; owned-item state; dry run; local tests; owned-item teardown.
 
-**Manual or tenant-dependent:** connection credentials; SQL/Cosmos mirroring eligibility; shortcut connection selection; Lakehouse attachment and notebook run; Warehouse SQL execution/data load; semantic source binding; RLS membership; PBIR visual refinement; Ontology binding; Data Agent source IDs, testing, and publish; Catalog endorsement, Purview evidence, and Capacity Metrics screenshots.
+**Manual or tenant-dependent:** connection credentials; SQL/Cosmos mirroring eligibility; shortcut connection selection; Warehouse `deploy.sql` execution/data load; RLS membership; PBIR visual refinement; Ontology-to-Gold entity/property binding; Data Agent testing and publish; Catalog endorsement, Purview evidence, and Capacity Metrics screenshots.
 
 Lakehouse deployment intentionally includes only `lakehouse.metadata.json`. Do not add a placeholder `shortcuts.metadata.json`: Fabric validates that file against an item-specific schema, and shortcut targets require real environment connection values. Create SQL/Cosmos/ADLS shortcuts after the Lakehouse exists by supported REST/UI operations.
 
@@ -95,8 +95,10 @@ python .\scripts\prepare_gold.py
 # Rerun deployment; the semantic model is deferred until Gold is ready.
 python .\scripts\fabric_deploy.py
 
-# Only after confirming Ontology/Data Agent preview availability:
+# Only after confirming Ontology/Data Agent preview availability; this also
+# stages the owned model/ontology/workspace IDs into report and agent payloads.
 python .\scripts\fabric_deploy.py --include-preview
+python .\scripts\fabric_deploy.py --verify
 ```
 
 Use `az login --service-principal` or workload identity in CI. Initial Azure SQL creation in this sample intentionally requires an Entra user administrator; production automation should precreate the server with an Entra group administrator and grant the service principal database roles.
@@ -111,12 +113,13 @@ $env:FABRIC_WORKSPACE_ID = "930bbe6f-b256-46b7-a70e-f3dcab99d2c9"
 # injected into this process by the caller.
 .\scripts\preflight.ps1 -RequireFabricAccess
 python .\scripts\fabric_deploy.py --discover
-python .\scripts\fabric_deploy.py
+# Deploy/update core, report, Ontology shell, and both Data Agent drafts.
+python .\scripts\fabric_deploy.py --include-preview
 python .\scripts\fabric_deploy.py --verify
 Remove-Item Env:AZURE_CLIENT_SECRET -ErrorAction SilentlyContinue
 ```
 
-The service principal must be allowed to use Fabric APIs in tenant settings and have Contributor or Admin access to `MaddysWS`. The workspace must already be assigned to an eligible Fabric capacity. The deployer reads the owned Lakehouse's `sqlEndpointProperties` and substitutes its live connection string and SQL endpoint ID into the semantic-model definition in memory; those values are never committed. Source-specific values still required after item creation include the Lakehouse landing path `Files/landing/property-assessment` and environment-specific semantic model/ontology item IDs for Data Agents. Azure SQL, Cosmos DB, and ADLS provisioning remains an Azure CLI workflow.
+The service principal must be allowed to use Fabric APIs in tenant settings and have Contributor or Admin access to `MaddysWS`. The workspace must already be assigned to an eligible Fabric capacity. The deployer reads the owned Lakehouse's `sqlEndpointProperties` and substitutes its live connection string and SQL endpoint ID into the semantic-model definition in memory. It similarly stages the owned semantic-model ID into PBIR and the semantic Data Agent, then stages the newly owned Ontology ID into the ontology Data Agent. None of those environment-specific values are committed. Azure SQL, Cosmos DB, and ADLS provisioning remains an Azure CLI workflow.
 
 Run `PropertyAssessmentMedallion` before expecting the Direct Lake model to frame or answer queries: `dim_property`, `dim_date`, `fact_assessment`, `fact_sale`, and `fact_appeal` must exist in the Lakehouse SQL endpoint.
 
@@ -135,7 +138,7 @@ Before creating anything, a normal deploy rechecks every persisted `Accepted` op
 - Semantic model is deferred: run `python .\scripts\prepare_gold.py`; inspect its uploaded Files, notebook job status, and missing-table message before retrying deployment.
 - Direct Lake error: replace the semantic model expression placeholder by connecting the model to the deployed Lakehouse SQL analytics endpoint.
 - Ontology/Data Agent rejected: confirm tenant preview availability and use the exact UI steps in Steps 6-7.
-- Warehouse tables empty: schema creation and data loading are separate; use a pipeline or `COPY INTO` from Lakehouse-exported Parquet.
+- Warehouse tables empty: `deploy.sql` is intentionally manual; execute it in the Warehouse SQL editor, then load through a pipeline or `COPY INTO` from Lakehouse-exported Parquet.
 - Teardown: run only `python .\scripts\fabric_teardown.py --confirm DELETE-OWNED-PROPERTY-ASSESSMENT-ITEMS`; Azure sources are intentionally not auto-deleted.
 
 ## Verified platform references

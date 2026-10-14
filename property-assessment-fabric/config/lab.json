@@ -47,7 +47,8 @@
       "displayName": "PropertyAssessmentOverview",
       "type": "Report",
       "source": "fabric/Property Assessment Overview.Report",
-      "automation": "manual-pbir-after-binding"
+      "semanticModelSourceDisplayName": "PropertyAssessmentModel",
+      "automation": "rest-definition"
     },
     {
       "displayName": "PropertyAssessmentOntology",
@@ -59,12 +60,14 @@
       "displayName": "AssessmentSemanticAgent",
       "type": "DataAgent",
       "source": "fabric/Assessment Semantic Agent.DataAgent",
+      "semanticModelSourceDisplayName": "PropertyAssessmentModel",
       "automation": "rest-definition-preview"
     },
     {
       "displayName": "AssessmentOntologyAgent",
       "type": "DataAgent",
       "source": "fabric/Assessment Ontology Agent.DataAgent",
+      "ontologySourceDisplayName": "PropertyAssessmentOntology",
       "automation": "rest-definition-preview"
     }
   ]

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/dataAgent/definition/dataSource/1.0.0/schema.json",
+  "artifactId": "<PROPERTY_ASSESSMENT_SEMANTIC_MODEL_ITEM_ID>",
+  "workspaceId": "<FABRIC_WORKSPACE_ID>",
+  "displayName": "PropertyAssessmentModel",
+  "type": "semantic_model",
+  "userDescription": "Direct Lake model for the fictional Property Assessment lab.",
+  "dataSourceInstructions": "Use governed measures, preserve row-level security, identify all records as synthetic, and include tax year and CAD currency where relevant."
+}

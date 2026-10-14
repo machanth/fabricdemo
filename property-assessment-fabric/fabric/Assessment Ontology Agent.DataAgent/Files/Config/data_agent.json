@@ -1,27 +1,3 @@
 {
-  "name": "AssessmentOntologyAgent",
-  "description": "Explains fictional property-assessment entities and relationships through the Generation 2 ontology.",
-  "instructions": [
-    "All entities and values are synthetic.",
-    "Prefer ontology entity names Parcel, Assessment, Appeal, Sale, and Inspection.",
-    "Explain the relationship path used in every multi-entity answer.",
-    "Do not claim an ontology binding exists until readback confirms it.",
-    "Return identifiers only when useful for drill-through."
-  ],
-  "testPrompts": [
-    {
-      "prompt": "Find fictional parcels with both a low-confidence assessment and an unresolved appeal.",
-      "expectedShape": "Parcel list with assessment confidence, appeal status, and relationship path."
-    },
-    {
-      "prompt": "Explain how an appeal relates to an inspection.",
-      "expectedShape": "Plain-language entity path and a note if no direct relationship is bound."
-    }
-  ],
-  "dataSources": [
-    {
-      "type": "Ontology",
-      "itemId": "<PROPERTY_ASSESSMENT_ONTOLOGY_ITEM_ID>"
-    }
-  ]
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/dataAgent/definition/dataAgent/2.1.0/schema.json"
 }

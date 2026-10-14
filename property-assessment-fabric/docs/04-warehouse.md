@@ -2,7 +2,7 @@
 
 **Objective (25-50 min):** create the Warehouse, run `deploy.sql`, and load Gold outputs through a Fabric pipeline or `COPY INTO` from exported Parquet.
 
-The Warehouse definition is intentionally split: REST creates the item, while SQL DDL runs in the Warehouse editor because source IDs, endpoint names, and cross-endpoint capabilities vary by tenant. Source control contains dimensions, facts, and the equity view.
+The Warehouse definition is intentionally split: REST creates the item, while `deploy.sql` remains a **manual** Warehouse SQL editor step. The generic Fabric item-definition API does not execute arbitrary Warehouse DDL, and this lab does not claim otherwise. Source control contains dimensions, facts, and the equity view; loading remains a pipeline or `COPY INTO` task because endpoint and source paths vary by tenant.
 
 ```sql
 SELECT TOP 20 * FROM assessment.vwNeighborhoodEquity
@@ -19,4 +19,3 @@ GROUP BY p.PropertyClassCode;
 **Checkpoint/evidence:** objects exist, rows are loaded, and all three queries return plausible fictional results.
 
 **Troubleshooting:** `CREATE SCHEMA` is not idempotent after first run; use a clean lab Warehouse or guard it in your tenant-specific deployment. Empty tables mean load was not run.
-

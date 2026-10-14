@@ -20,6 +20,7 @@ from requests.exceptions import ConnectTimeout, ReadTimeout, SSLError
 ROOT = Path(__file__).resolve().parents[1]
 FABRIC_SCOPE = "https://api.fabric.microsoft.com/.default"
 TEXT_EXCLUDES = {"README.md", "deploy.sql"}
+DEPLOY_EXCLUDED_DIRECTORIES = {"design", "tests"}
 CLIENT_CREDENTIAL_ENV_VARS = ("AZURE_TENANT_ID", "AZURE_CLIENT_ID", "AZURE_CLIENT_SECRET")
 SAFE_DISPLAY_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9]{2,127}$")
 MANAGED_DESCRIPTION = "Fictional property-assessment hackathon lab; managed by property-assessment-fabric."
@@ -170,6 +171,38 @@ class Fabric:
     def update_definition(self, item_id: str, definition: dict) -> None:
         self.request("POST", f"/workspaces/{self.workspace_id}/items/{item_id}/updateDefinition", json={"definition": definition})
 
+    def get_definition(self, item_id: str) -> dict:
+        path = f"/workspaces/{self.workspace_id}/items/{item_id}/getDefinition"
+        response = self.session.post(f"{self.api_base}{path}", timeout=120)
+        if response.status_code == 202:
+            location = response.headers.get("Location")
+            if not location:
+                raise RuntimeError("Fabric getDefinition returned HTTP 202 without an operation Location header.")
+            operation = self.poll_operation(location, self.retry_after_seconds(response))
+            result = operation.get("result")
+            if isinstance(result, dict):
+                definition = result.get("definition", result)
+                if definition.get("parts"):
+                    return definition
+            definition = operation.get("definition")
+            if isinstance(definition, dict) and definition.get("parts"):
+                return definition
+            resource_location = operation.get("resourceLocation")
+            if resource_location:
+                result_response = self.session.get(resource_location, timeout=120)
+                if result_response.status_code >= 400:
+                    raise RuntimeError(
+                        "Fabric getDefinition result failed: "
+                        f"{result_response.status_code} {result_response.text}"
+                    )
+                payload = result_response.json()
+                return payload.get("definition", payload)
+            raise RuntimeError("Fabric getDefinition operation succeeded without a definition result.")
+        if response.status_code >= 400:
+            raise RuntimeError(f"Fabric API POST {path} failed: {response.status_code} {response.text}")
+        payload = response.json()
+        return payload.get("definition", payload)
+
     def run_notebook(self, item_id: str) -> dict:
         response = self.session.post(
             f"{self.api_base}/workspaces/{self.workspace_id}/items/{item_id}/jobs/instances?jobType=RunNotebook",
@@ -214,15 +247,22 @@ def definition_for(folder: Path, replacements: dict[str, str] | None = None) -> 
         return None
     parts = []
     for path in sorted(folder.rglob("*")):
-        if not path.is_file() or path.name in TEXT_EXCLUDES:
+        relative_path = path.relative_to(folder)
+        if (
+            not path.is_file()
+            or path.name in TEXT_EXCLUDES
+            or any(part in DEPLOY_EXCLUDED_DIRECTORIES for part in relative_path.parts)
+        ):
             continue
-        relative = path.relative_to(folder).as_posix()
+        relative = relative_path.as_posix()
         content = path.read_bytes()
         if replacements and path.suffix.lower() in {".tmdl", ".json", ".pbism", ".pbir", ".py"}:
             text = content.decode("utf-8")
             for placeholder, value in replacements.items():
                 text = text.replace(placeholder, value)
-            unresolved = sorted(set(re.findall(r"<FABRIC_[A-Z0-9_]+>", text)))
+            unresolved = sorted(
+                set(re.findall(r"<(?:FABRIC|PROPERTY_ASSESSMENT)_[A-Z0-9_]+>", text))
+            )
             if unresolved:
                 raise RuntimeError(
                     f"Unresolved deployment placeholders in {relative}: {', '.join(unresolved)}"
@@ -283,6 +323,37 @@ def notebook_replacements(state: dict, item: dict, workspace_id: str) -> dict[st
         "<FABRIC_WORKSPACE_ID>": workspace_id,
         "<FABRIC_LAKEHOUSE_ID>": lakehouse["id"],
     }
+
+
+def item_reference_replacements(
+    state: dict,
+    item: dict,
+    workspace_id: str,
+) -> dict[str, str] | None:
+    replacements = {}
+    semantic_model_name = item.get("semanticModelSourceDisplayName")
+    if semantic_model_name:
+        semantic_model = owned_item(state, semantic_model_name, "SemanticModel")
+        replacements["<PROPERTY_ASSESSMENT_SEMANTIC_MODEL_ITEM_ID>"] = semantic_model["id"]
+    ontology_name = item.get("ontologySourceDisplayName")
+    if ontology_name:
+        ontology = owned_item(state, ontology_name, "Ontology")
+        replacements["<PROPERTY_ASSESSMENT_ONTOLOGY_ITEM_ID>"] = ontology["id"]
+    if replacements and item["type"] == "DataAgent":
+        replacements["<FABRIC_WORKSPACE_ID>"] = workspace_id
+    return replacements or None
+
+
+def decoded_definition_text(definition: dict) -> str:
+    decoded = []
+    for part in definition.get("parts", []):
+        if part.get("payloadType") != "InlineBase64" or not part.get("payload"):
+            continue
+        try:
+            decoded.append(base64.b64decode(part["payload"]).decode("utf-8"))
+        except (ValueError, UnicodeDecodeError):
+            continue
+    return "\n".join(decoded)
 
 
 def onelake_file_system(workspace_id: str):
@@ -533,6 +604,34 @@ def main() -> None:
             if live["displayName"] != owned["displayName"] or live["type"] != owned["type"]:
                 failures.append(f"identity mismatch for {owned['id']}")
                 continue
+            if owned["type"] in {"Report", "Ontology", "DataAgent"}:
+                try:
+                    definition = client.get_definition(owned["id"])
+                    if not definition.get("parts"):
+                        raise RuntimeError("definition readback contained no parts")
+                    configured = next(
+                        item
+                        for item in config["items"]
+                        if item["displayName"] == owned["displayName"]
+                        and item["type"] == owned["type"]
+                    )
+                    replacements = item_reference_replacements(
+                        state,
+                        configured,
+                        workspace_id,
+                    )
+                    readback_text = decoded_definition_text(definition)
+                    for value in (replacements or {}).values():
+                        if value not in readback_text:
+                            raise RuntimeError(
+                                f"definition readback is missing staged reference {value}"
+                            )
+                except (RuntimeError, StopIteration) as exc:
+                    failures.append(
+                        f"definition verification failed for {owned['type']} "
+                        f"{owned['displayName']}: {exc}"
+                    )
+                    continue
             print(f"verified {owned['type']}: {owned['displayName']} ({owned['id']})")
         if failures:
             raise RuntimeError("Fabric verification failed: " + "; ".join(failures))
@@ -580,6 +679,13 @@ def main() -> None:
         notebook_binding = notebook_replacements(state, item, workspace_id)
         if notebook_binding:
             replacements.update(notebook_binding)
+        try:
+            reference_binding = item_reference_replacements(state, item, workspace_id)
+        except RuntimeError as exc:
+            print(f"deferred {item['type']}: {item['displayName']} ({exc})")
+            continue
+        if reference_binding:
+            replacements.update(reference_binding)
         direct_lake_binding = direct_lake_replacements(client, state, item)
         if direct_lake_binding:
             source = owned_item(state, item["directLakeSourceDisplayName"], "Lakehouse")
@@ -627,7 +733,10 @@ def main() -> None:
             pending_record["itemId"] = created["id"]
         persist_state(state_path, state)
         print(f"created {item['type']}: {item['displayName']} ({created['id']})")
-    print("Definitions deployed. Run Warehouse/deploy.sql in the Warehouse SQL editor and bind source IDs where placeholders remain.")
+    print(
+        "Definitions deployed. Run Warehouse/deploy.sql manually, bind Ontology entities "
+        "to Gold in the preview UI, and publish Data Agents only after persona testing."
+    )
 
 
 if __name__ == "__main__":

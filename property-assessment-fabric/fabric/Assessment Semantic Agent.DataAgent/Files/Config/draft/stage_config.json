@@ -1,6 +1,4 @@
 {
-  "stage": "draft",
-  "published": false,
-  "syntheticDataWarningRequired": true
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/dataAgent/definition/stageConfiguration/1.0.0/schema.json",
+  "aiInstructions": "All records are synthetic and fictional. Never present estimated tax as legal, financial, or valuation advice. Use semantic-model measures instead of recomputing business metrics. Respect row-level security and never infer hidden property classes. State the tax year and CAD currency for monetary values. If requested evidence is unavailable, identify the missing field or measure."
 }
-

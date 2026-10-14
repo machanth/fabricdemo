@@ -1,0 +1,10 @@
+[
+  {
+    "prompt": "Find fictional parcels with both a low-confidence assessment and an unresolved appeal.",
+    "expectedShape": "Parcel list with assessment confidence, appeal status, relationship path, and synthetic warning."
+  },
+  {
+    "prompt": "Explain how an appeal relates to a sale.",
+    "expectedShape": "Plain-language entity path and a note if no bound relationship exists."
+  }
+]

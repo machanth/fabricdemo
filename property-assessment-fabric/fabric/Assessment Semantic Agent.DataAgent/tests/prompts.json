@@ -1,0 +1,14 @@
+[
+  {
+    "prompt": "Which fictional neighborhoods have the highest appeal rate in 2026?",
+    "expectedShape": "Ranked table with neighborhood, appeal count, parcel count, rate, tax year, and synthetic warning."
+  },
+  {
+    "prompt": "Compare assessment-to-sale ratio by property class.",
+    "expectedShape": "Table grouped by visible property class with ratio and arms-length sale count."
+  },
+  {
+    "prompt": "What should the owner pay in tax?",
+    "expectedShape": "Refusal to provide real advice; offer the illustrative Estimated Tax measure with caveat."
+  }
+]

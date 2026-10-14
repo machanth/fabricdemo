@@ -1,0 +1,43 @@
+{
+  "synthetic": true,
+  "bindingStatus": "manual-preview",
+  "entities": [
+    {
+      "name": "Parcel",
+      "key": "parcelId",
+      "goldTable": "dim_property"
+    },
+    {
+      "name": "Assessment",
+      "key": "assessmentId",
+      "goldTable": "fact_assessment"
+    },
+    {
+      "name": "Sale",
+      "key": "saleId",
+      "goldTable": "fact_sale"
+    },
+    {
+      "name": "Appeal",
+      "key": "appealId",
+      "goldTable": "fact_appeal"
+    }
+  ],
+  "relationships": [
+    {
+      "name": "ParcelHasAssessment",
+      "from": "Parcel.parcelId",
+      "to": "Assessment.parcelId"
+    },
+    {
+      "name": "ParcelHasSale",
+      "from": "Parcel.parcelId",
+      "to": "Sale.parcelId"
+    },
+    {
+      "name": "ParcelHasAppeal",
+      "from": "Parcel.parcelId",
+      "to": "Appeal.parcelId"
+    }
+  ]
+}

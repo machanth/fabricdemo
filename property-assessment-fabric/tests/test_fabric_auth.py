@@ -314,6 +314,121 @@ def test_semantic_definition_stages_live_direct_lake_values_in_memory():
     assert "<FABRIC_SQL_DATABASE>" in committed
 
 
+def test_report_definition_stages_live_semantic_model_id_in_memory():
+    config = json.loads((ROOT / "config" / "lab.json").read_text(encoding="utf-8"))
+    report_item = next(item for item in config["items"] if item["type"] == "Report")
+    state = {
+        "items": [
+            {
+                "id": "59badcb1-1b17-4043-867e-302462515677",
+                "displayName": "PropertyAssessmentModel",
+                "type": "SemanticModel",
+            }
+        ]
+    }
+
+    replacements = fabric_deploy.item_reference_replacements(
+        state,
+        report_item,
+        "930bbe6f-b256-46b7-a70e-f3dcab99d2c9",
+    )
+    definition = fabric_deploy.definition_for(
+        ROOT / report_item["source"],
+        replacements=replacements,
+    )
+    binding_part = next(
+        part for part in definition["parts"] if part["path"] == "definition.pbir"
+    )
+    staged = base64.b64decode(binding_part["payload"]).decode("utf-8")
+    committed = (ROOT / report_item["source"] / "definition.pbir").read_text(encoding="utf-8")
+
+    assert "semanticModelId=59badcb1-1b17-4043-867e-302462515677" in staged
+    assert "<PROPERTY_ASSESSMENT_SEMANTIC_MODEL_ITEM_ID>" not in staged
+    assert "<PROPERTY_ASSESSMENT_SEMANTIC_MODEL_ITEM_ID>" in committed
+
+
+def test_data_agent_definitions_stage_owned_source_and_workspace_ids():
+    config = json.loads((ROOT / "config" / "lab.json").read_text(encoding="utf-8"))
+    state = {
+        "items": [
+            {
+                "id": "59badcb1-1b17-4043-867e-302462515677",
+                "displayName": "PropertyAssessmentModel",
+                "type": "SemanticModel",
+            },
+            {
+                "id": "ontology-id",
+                "displayName": "PropertyAssessmentOntology",
+                "type": "Ontology",
+            },
+        ]
+    }
+    expected = {
+        "AssessmentSemanticAgent": "59badcb1-1b17-4043-867e-302462515677",
+        "AssessmentOntologyAgent": "ontology-id",
+    }
+
+    for item in (item for item in config["items"] if item["type"] == "DataAgent"):
+        replacements = fabric_deploy.item_reference_replacements(
+            state,
+            item,
+            "930bbe6f-b256-46b7-a70e-f3dcab99d2c9",
+        )
+        definition = fabric_deploy.definition_for(
+            ROOT / item["source"],
+            replacements=replacements,
+        )
+        staged = fabric_deploy.decoded_definition_text(definition)
+        paths = {part["path"] for part in definition["parts"]}
+
+        assert expected[item["displayName"]] in staged
+        assert "930bbe6f-b256-46b7-a70e-f3dcab99d2c9" in staged
+        assert "<PROPERTY_ASSESSMENT_" not in staged
+        assert "<FABRIC_WORKSPACE_ID>" not in staged
+        assert all(not path.startswith("tests/") for path in paths)
+
+
+def test_ontology_definition_is_minimal_and_excludes_design_files():
+    folder = ROOT / "fabric" / "Property Assessment Ontology.Ontology"
+
+    definition = fabric_deploy.definition_for(folder)
+    paths = {part["path"] for part in definition["parts"]}
+
+    assert paths == {".platform", "database.tmdl"}
+    assert all(not path.startswith("design/") for path in paths)
+
+
+def test_get_definition_returns_synchronous_definition():
+    expected = {
+        "parts": [
+            {
+                "path": "definition.pbir",
+                "payload": base64.b64encode(b"{}").decode("ascii"),
+                "payloadType": "InlineBase64",
+            }
+        ]
+    }
+
+    class Session:
+        def post(self, url, timeout):
+            assert url.endswith(
+                "/workspaces/workspace-id/items/report-id/getDefinition"
+            )
+            assert timeout == 120
+            return SimpleNamespace(
+                status_code=200,
+                text="",
+                json=lambda: {"definition": expected},
+            )
+
+    client = fabric_deploy.Fabric.__new__(fabric_deploy.Fabric)
+    client.api_base = "https://api.fabric.microsoft.com/v1"
+    client.workspace_id = "workspace-id"
+    client.session = Session()
+
+    assert client.get_definition("report-id") == expected
+
+
 def test_notebook_definition_stages_owned_lakehouse_binding_in_memory():
     config = json.loads((ROOT / "config" / "lab.json").read_text(encoding="utf-8"))
     notebook_item = next(item for item in config["items"] if item["type"] == "Notebook")

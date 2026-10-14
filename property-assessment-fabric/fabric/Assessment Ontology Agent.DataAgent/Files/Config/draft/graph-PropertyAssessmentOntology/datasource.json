@@ -1,0 +1,9 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/dataAgent/definition/dataSource/1.0.0/schema.json",
+  "artifactId": "<PROPERTY_ASSESSMENT_ONTOLOGY_ITEM_ID>",
+  "workspaceId": "<FABRIC_WORKSPACE_ID>",
+  "displayName": "PropertyAssessmentOntology",
+  "type": "graph",
+  "userDescription": "Generation 2 ontology shell for the fictional Property Assessment lab.",
+  "dataSourceInstructions": "Use only bound ontology entities and relationships. Identify all records as synthetic and explain the relationship path in multi-entity answers."
+}

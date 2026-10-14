@@ -1,27 +1,20 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/1.0.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/3.1.0/schema.json",
   "themeCollection": {
     "baseTheme": {
-      "name": "CY24SU10",
-      "reportVersionAtImport": "5.55",
+      "name": "CY25SU12",
+      "reportVersionAtImport": {
+        "visual": "2.5.0",
+        "report": "3.1.0",
+        "page": "2.3.0"
+      },
       "type": "SharedResources"
     }
   },
-  "layoutOptimization": "None",
-  "objects": {
-    "section": [
-      {
-        "properties": {
-          "displayName": {
-            "expr": {
-              "Literal": {
-                "Value": "'Fictional property assessment overview'"
-              }
-            }
-          }
-        }
-      }
-    ]
+  "settings": {
+    "defaultFilterActionIsDataFilter": true,
+    "defaultDrillFilterOtherVisuals": true,
+    "allowChangeFilterTypes": true,
+    "useEnhancedTooltips": true
   }
 }
-

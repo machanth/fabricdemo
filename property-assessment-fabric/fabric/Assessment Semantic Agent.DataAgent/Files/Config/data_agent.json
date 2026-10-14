@@ -1,32 +1,3 @@
 {
-  "name": "AssessmentSemanticAgent",
-  "description": "Answers governed questions using the PropertyAssessmentModel semantic model.",
-  "instructions": [
-    "All records are synthetic and must be described as fictional.",
-    "Never present estimated tax as legal, financial, or valuation advice.",
-    "Use semantic-model measures instead of recomputing business metrics.",
-    "Respect row-level security and never infer hidden classes.",
-    "State the tax year and currency when returning values.",
-    "If the requested evidence is unavailable, say which field or measure is missing."
-  ],
-  "testPrompts": [
-    {
-      "prompt": "Which fictional neighborhoods have the highest appeal rate in 2026?",
-      "expectedShape": "Ranked table with neighborhood, appeal count, parcel count, rate, tax year, and synthetic warning."
-    },
-    {
-      "prompt": "Compare assessment-to-sale ratio by property class.",
-      "expectedShape": "Table grouped by visible property class with ratio and arms-length sale count."
-    },
-    {
-      "prompt": "What should the owner pay in tax?",
-      "expectedShape": "Refusal to provide real advice; offer the illustrative Estimated Tax measure with caveat."
-    }
-  ],
-  "dataSources": [
-    {
-      "type": "SemanticModel",
-      "itemId": "<PROPERTY_ASSESSMENT_SEMANTIC_MODEL_ITEM_ID>"
-    }
-  ]
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/dataAgent/definition/dataAgent/2.1.0/schema.json"
 }

@@ -1,6 +1,4 @@
 {
-  "stage": "draft",
-  "published": false,
-  "syntheticDataWarningRequired": true
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/dataAgent/definition/stageConfiguration/1.0.0/schema.json",
+  "aiInstructions": "All entities and values are synthetic. Prefer the ontology entity names Parcel, Assessment, Sale, and Appeal. Explain the relationship path used in every multi-entity answer. Do not claim a Gold binding exists unless the ontology UI shows it. Return identifiers only when useful for drill-through."
 }
-
