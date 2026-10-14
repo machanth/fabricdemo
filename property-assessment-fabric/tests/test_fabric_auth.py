@@ -169,3 +169,41 @@ def test_create_resolves_lro_result_by_exact_name_and_type():
     item = {"displayName": "PropertyAssessmentLakehouse", "type": "Lakehouse"}
 
     assert client.create(item, definition=None)["id"] == "created-id"
+
+
+def test_lakehouse_definition_excludes_environment_specific_shortcuts():
+    folder = ROOT / "fabric" / "Property Assessment.Lakehouse"
+
+    definition = fabric_deploy.definition_for(folder)
+    paths = {part["path"] for part in definition["parts"]}
+
+    assert "lakehouse.metadata.json" in paths
+    assert "shortcuts.metadata.json" not in paths
+
+
+def test_reconcile_marks_terminal_failed_operation(monkeypatch, tmp_path):
+    state = {
+        "workspaceId": "workspace-id",
+        "items": [],
+        "operations": [
+            {
+                "operationId": "operation-id",
+                "operationLocation": "https://operation.example/operation-id",
+                "displayName": "PropertyAssessmentLakehouse",
+                "type": "Lakehouse",
+                "status": "Accepted",
+            }
+        ],
+    }
+    client = SimpleNamespace(
+        poll_operation=lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            fabric_deploy.FabricOperationFailed("Fabric operation ended as Failed")
+        )
+    )
+    state_path = tmp_path / "owned-items.json"
+    monkeypatch.setattr(fabric_deploy, "persist_state", lambda _path, _state: None)
+
+    fabric_deploy.reconcile_pending_operations(client, state, state_path)
+
+    assert state["operations"][0]["status"] == "Failed"
+    assert "ended as Failed" in state["operations"][0]["error"]

@@ -1,5 +1,0 @@
-{
-  "shortcuts": [],
-  "note": "Create ADLS Gen2, Azure SQL, and Cosmos shortcuts/connections after deployment because connection IDs and credentials are environment-specific."
-}
-

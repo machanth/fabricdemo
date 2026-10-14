@@ -26,6 +26,10 @@ MAX_TRANSIENT_POLL_FAILURES = 8
 MAX_LRO_SECONDS = 900
 
 
+class FabricOperationFailed(RuntimeError):
+    pass
+
+
 def credential_mode() -> str:
     configured = [name for name in CLIENT_CREDENTIAL_ENV_VARS if os.getenv(name)]
     if configured and len(configured) != len(CLIENT_CREDENTIAL_ENV_VARS):
@@ -103,12 +107,12 @@ class Fabric:
                 delay = min(2 ** transient_failures, 30)
                 continue
             if operation.status_code >= 400:
-                raise RuntimeError(f"Fabric operation failed: {operation.status_code} {operation.text}")
+                raise FabricOperationFailed(f"Fabric operation failed: {operation.status_code} {operation.text}")
             payload = operation.json()
             status = payload.get("status")
             if status in {"Succeeded", "Failed", "Cancelled"}:
                 if status != "Succeeded":
-                    raise RuntimeError(f"Fabric operation ended as {status}: {operation.text}")
+                    raise FabricOperationFailed(f"Fabric operation ended as {status}: {operation.text}")
                 return payload
             transient_failures = 0
             delay = self.retry_after_seconds(operation)
@@ -247,6 +251,31 @@ def accepted_operation(response: requests.Response, item: dict) -> dict:
     return record
 
 
+def reconcile_pending_operations(client: Fabric, state: dict, state_path: Path) -> None:
+    changed = False
+    for pending in state["operations"]:
+        if pending["status"] != "Accepted":
+            continue
+        try:
+            payload = client.poll_operation(pending["operationLocation"], retry_after=1)
+        except FabricOperationFailed as exc:
+            pending["status"] = "Failed"
+            pending["lastCheckedAt"] = datetime.now(timezone.utc).isoformat()
+            pending["error"] = str(exc)
+            changed = True
+            continue
+        except RuntimeError:
+            continue
+        pending["status"] = "Succeeded"
+        pending["lastCheckedAt"] = datetime.now(timezone.utc).isoformat()
+        early_item_id = payload.get("itemId") or payload.get("id")
+        if early_item_id:
+            pending["itemId"] = early_item_id
+        changed = True
+    if changed:
+        persist_state(state_path, state)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Idempotently deploy supported Fabric item definitions.")
     parser.add_argument("--include-preview", action="store_true", help="Deploy Ontology and DataAgent preview definitions.")
@@ -301,6 +330,7 @@ def main() -> None:
             raise RuntimeError("Fabric verification failed: " + "; ".join(failures))
         print(f"Verified {len(state['items'])} owned Fabric items in workspace {workspace_id}.")
         return
+    reconcile_pending_operations(client, state, state_path)
     existing = client.list_items()
     owned_by_key = {(row["displayName"], row["type"]): row for row in state["items"]}
     for item in selected:
@@ -352,11 +382,19 @@ def main() -> None:
             state["operations"].append(pending_record)
             persist_state(state_path, state)
 
-        created = client.create(
-            item,
-            None if item["type"] == "Warehouse" else definition,
-            on_accepted=record_accepted,
-        )
+        try:
+            created = client.create(
+                item,
+                None if item["type"] == "Warehouse" else definition,
+                on_accepted=record_accepted,
+            )
+        except FabricOperationFailed as exc:
+            if pending_record:
+                pending_record["status"] = "Failed"
+                pending_record["lastCheckedAt"] = datetime.now(timezone.utc).isoformat()
+                pending_record["error"] = str(exc)
+                persist_state(state_path, state)
+            raise
         record = {"id": created["id"], "displayName": item["displayName"], "type": item["type"]}
         state["items"].append(record)
         owned_by_key[key] = record

@@ -81,6 +81,9 @@ def validate_artifacts() -> None:
     missing = [relative for relative in required if not (ROOT / relative).exists()]
     if missing:
         fail("Missing required artifacts: " + ", ".join(missing))
+    unsupported_shortcuts = ROOT / "fabric" / "Property Assessment.Lakehouse" / "shortcuts.metadata.json"
+    if unsupported_shortcuts.exists():
+        fail("Lakehouse shortcuts.metadata.json must not be committed; create environment-specific shortcuts after Lakehouse deployment.")
     for path in ROOT.rglob("*.json"):
         json.loads(path.read_text(encoding="utf-8"))
     for path in ROOT.rglob("*.tmdl"):

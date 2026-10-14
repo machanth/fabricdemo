@@ -71,6 +71,8 @@ Pass only when preflight, validation, and tests succeed. Copy `.env.example` to 
 
 **Manual or tenant-dependent:** connection credentials; SQL/Cosmos mirroring eligibility; shortcut connection selection; Lakehouse attachment and notebook run; Warehouse SQL execution/data load; semantic source binding; RLS membership; PBIR visual refinement; Ontology binding; Data Agent source IDs, testing, and publish; Catalog endorsement, Purview evidence, and Capacity Metrics screenshots.
 
+Lakehouse deployment intentionally includes only `lakehouse.metadata.json`. Do not add a placeholder `shortcuts.metadata.json`: Fabric validates that file against an item-specific schema, and shortcut targets require real environment connection values. Create SQL/Cosmos/ADLS shortcuts after the Lakehouse exists by supported REST/UI operations.
+
 The deployment script deliberately refuses unowned name collisions and does not silently claim unsupported success. Preview artifacts require `--include-preview`.
 
 ## Deployment
@@ -111,6 +113,8 @@ Remove-Item Env:AZURE_CLIENT_SECRET -ErrorAction SilentlyContinue
 The service principal must be allowed to use Fabric APIs in tenant settings and have Contributor or Admin access to `MaddysWS`. The workspace must already be assigned to an eligible Fabric capacity. Source-specific values are still required after item creation: Lakehouse landing path `Files/landing/property-assessment`, Lakehouse/SQL endpoint binding for the semantic model, and environment-specific semantic model/ontology item IDs for Data Agents. Azure SQL, Cosmos DB, and ADLS provisioning remains an Azure CLI workflow.
 
 `--discover` is read-only. It reports exact display-name/type matches, item IDs, ownership-state membership, the deployment marker, and pending LRO identities. A normal deploy safely adopts a single unrecorded exact match only when its description exactly equals the lab's deployment marker. Multiple matches or an unmarked match fail without modification. Accepted LRO identity is persisted before polling; transient connect/read/SSL polling failures use bounded backoff and Fabric `Retry-After`.
+
+Before creating anything, a normal deploy rechecks every persisted `Accepted` operation. A terminal Fabric `Failed`/`Cancelled` result is marked failed in ownership state and no longer blocks a safe retry; an unreachable or still-running operation remains accepted and blocks duplicate creation.
 
 ## Troubleshooting quick map
 
