@@ -97,6 +97,24 @@ def validate_artifacts() -> None:
     config = json.loads((ROOT / "config" / "lab.json").read_text(encoding="utf-8"))
     if config["workspace"]["id"] != "930bbe6f-b256-46b7-a70e-f3dcab99d2c9":
         fail("Target workspace ID changed unexpectedly.")
+    display_names = [item["displayName"] for item in config["items"]]
+    if len(display_names) != len(set(display_names)):
+        fail("Fabric item display names must be unique.")
+    invalid_display_names = [name for name in display_names if not re.fullmatch(r"[A-Za-z][A-Za-z0-9]{2,127}", name)]
+    if invalid_display_names:
+        fail(f"Fabric item display names are not API-safe: {invalid_display_names}")
+    for item in config["items"]:
+        source = ROOT / item["source"]
+        platform_path = source / ".platform"
+        if platform_path.exists():
+            platform = json.loads(platform_path.read_text(encoding="utf-8"))
+            if platform["metadata"]["displayName"] != item["displayName"]:
+                fail(f".platform display name does not match config for {item['displayName']}")
+        agent_path = source / "Files" / "Config" / "data_agent.json"
+        if agent_path.exists():
+            agent = json.loads(agent_path.read_text(encoding="utf-8"))
+            if agent["name"] != item["displayName"]:
+                fail(f"Data Agent name does not match config for {item['displayName']}")
     tracked_text = "\n".join(
         path.read_text(encoding="utf-8", errors="ignore")
         for path in ROOT.rglob("*")

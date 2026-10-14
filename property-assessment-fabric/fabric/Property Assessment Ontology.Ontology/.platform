@@ -2,7 +2,7 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
   "metadata": {
     "type": "Ontology",
-    "displayName": "Property Assessment Ontology",
+    "displayName": "PropertyAssessmentOntology",
     "description": "Generation 2 ontology shell for fictional parcels, assessments, sales, inspections, and appeals."
   },
   "config": {
@@ -10,4 +10,3 @@
     "logicalId": "c41b59aa-0fb9-46a4-b44d-fbdd278c4b89"
   }
 }
-

@@ -1,5 +1,5 @@
 {
-  "name": "Assessment Ontology Agent",
+  "name": "AssessmentOntologyAgent",
   "description": "Explains fictional property-assessment entities and relationships through the Generation 2 ontology.",
   "instructions": [
     "All entities and values are synthetic.",
@@ -25,4 +25,3 @@
     }
   ]
 }
-

@@ -4,6 +4,7 @@ import argparse
 import base64
 import json
 import os
+import re
 import shutil
 import time
 from pathlib import Path
@@ -16,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FABRIC_SCOPE = "https://api.fabric.microsoft.com/.default"
 TEXT_EXCLUDES = {"README.md", "deploy.sql"}
 CLIENT_CREDENTIAL_ENV_VARS = ("AZURE_TENANT_ID", "AZURE_CLIENT_ID", "AZURE_CLIENT_SECRET")
+SAFE_DISPLAY_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9]{2,127}$")
 
 
 def credential_mode() -> str:
@@ -49,6 +51,19 @@ def credential():
 
 def token() -> str:
     return credential().get_token(FABRIC_SCOPE).token
+
+
+def validate_display_names(items: list[dict]) -> None:
+    names = [item["displayName"] for item in items]
+    duplicates = sorted({name for name in names if names.count(name) > 1})
+    if duplicates:
+        raise RuntimeError(f"Fabric display names must be unique: {', '.join(duplicates)}")
+    invalid = [name for name in names if not SAFE_DISPLAY_NAME.fullmatch(name)]
+    if invalid:
+        raise RuntimeError(
+            "Fabric display names must use 3-128 alphanumeric characters, start with a letter, "
+            f"and contain no spaces: {', '.join(invalid)}"
+        )
 
 
 class Fabric:
@@ -131,6 +146,7 @@ def main() -> None:
     preview_types = {"Ontology", "DataAgent"}
     allowed_modes = {"rest-definition", "create-then-sql", "rest-definition-preview"}
     selected = [item for item in config["items"] if item["automation"] in allowed_modes and (args.include_preview or item["type"] not in preview_types)]
+    validate_display_names(config["items"])
     if args.dry_run:
         print(json.dumps({"workspaceId": workspace_id, "items": selected}, indent=2))
         return

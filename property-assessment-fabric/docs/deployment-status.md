@@ -4,9 +4,9 @@ Checked on 2026-10-13 against target workspace `MaddysWS` (`930bbe6f-b256-46b7-a
 
 - Local data generation: **passed** at scale 240 and seed 20261013.
 - Contract/artifact validation: **passed**.
-- Unit tests: **6 passed** after adding client-credential selection, partial-configuration rejection, and authorization-header safety tests.
+- Unit tests: **8 passed**, including display-name policy, client-credential selection, partial-configuration rejection, and authorization-header safety tests.
 - Fabric deployment dry run: **passed**; four automatable non-preview items selected. The thin PBIR report is source controlled but intentionally manual until its semantic-model binding is materialized.
-- Live Fabric authentication/readback: **not performed in this session**. The Azure CLI blocker is resolved for Fabric REST calls by a direct OAuth client-credentials fallback using process environment variables. The parent coordinator will inject the secret transiently. No secret was available here, no Fabric API request was made, no item IDs or status codes were produced, and no deployment is claimed.
+- Live Fabric authentication/readback: **client-credential authentication succeeded in the parent session**. The first create request failed before an item was created: `POST /v1/workspaces/930bbe6f-b256-46b7-a70e-f3dcab99d2c9/items` returned HTTP 400, request ID `258759b8-094f-4b80-bba5-83972454e223`, `InvalidInput / InvalidParameter`, because `Property Assessment` was invalid for the Lakehouse display name. All configured Fabric display names are now unique alphanumeric identifiers without spaces, and validation rejects regressions before an API call.
 - Azure source deployment: **not attempted**. Azure SQL, Cosmos DB, and ADLS provisioning remains separate and still requires Azure CLI.
 
 Exact noninteractive sequence after the parent process injects `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, and `AZURE_CLIENT_SECRET`:

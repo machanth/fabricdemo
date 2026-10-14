@@ -1,3 +1,4 @@
+import json
 import sys
 from pathlib import Path
 
@@ -53,3 +54,16 @@ def test_fabric_session_uses_access_token_not_client_secret(monkeypatch):
 
     assert client.session.headers["Authorization"] == "Bearer short-lived-access-token"
     assert "client-secret" not in str(client.session.headers)
+
+
+def test_configured_fabric_display_names_are_api_safe():
+    config = json.loads((ROOT / "config" / "lab.json").read_text(encoding="utf-8"))
+
+    fabric_deploy.validate_display_names(config["items"])
+
+
+def test_invalid_fabric_display_name_is_rejected():
+    with pytest.raises(RuntimeError, match="contain no spaces"):
+        fabric_deploy.validate_display_names(
+            [{"displayName": "Property Assessment", "type": "Lakehouse"}]
+        )

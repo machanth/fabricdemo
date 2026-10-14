@@ -1,6 +1,6 @@
 {
-  "name": "Assessment Semantic Agent",
-  "description": "Answers governed questions using the Property Assessment semantic model.",
+  "name": "AssessmentSemanticAgent",
+  "description": "Answers governed questions using the PropertyAssessmentModel semantic model.",
   "instructions": [
     "All records are synthetic and must be described as fictional.",
     "Never present estimated tax as legal, financial, or valuation advice.",
@@ -30,4 +30,3 @@
     }
   ]
 }
-

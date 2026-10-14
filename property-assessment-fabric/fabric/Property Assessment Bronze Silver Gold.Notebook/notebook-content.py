@@ -1,4 +1,4 @@
-# Fabric notebook source. Attach the "Property Assessment" Lakehouse before running.
+# Fabric notebook source. Attach the "PropertyAssessmentLakehouse" Lakehouse before running.
 # PARAMETERS
 source_root = "Files/landing/property-assessment"
 appeals_path = f"{source_root}/adls/assessment_appeals.parquet"
@@ -109,4 +109,3 @@ for name, frame in {"dim_property": dim_property, "dim_date": dim_date, "fact_as
 # 2. Do appeal reasons correlate with condition, class, or confidence score?
 # 3. Which nullable AI enrichment columns would most improve triage?
 display(fact_assessment.groupBy("taxYear").agg(F.count("*").alias("assessments"), F.round(F.avg("assessedValue"), 2).alias("avgAssessedValue")))
-
