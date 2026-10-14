@@ -238,3 +238,20 @@ def test_semantic_model_pbism_uses_supported_minimal_schema():
         "version": "5.0",
         "settings": {"qnaEnabled": True},
     }
+
+
+def test_tmdl_model_uses_folder_discovery_not_ref_declarations():
+    definition = (
+        ROOT
+        / "fabric"
+        / "Property Assessment Model.SemanticModel"
+        / "definition"
+    )
+    model = (definition / "model.tmdl").read_text(encoding="utf-8")
+
+    assert "ref table" not in model
+    assert "ref role" not in model
+    assert not (definition / "roles.tmdl").exists()
+    assert {
+        path.name for path in (definition / "roles").glob("*.tmdl")
+    } == {"ResidentialReviewer.tmdl", "CommercialReviewer.tmdl"}

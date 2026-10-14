@@ -106,6 +106,35 @@ def validate_artifacts() -> None:
             fail(f"TMDL file has no indented properties: {path.relative_to(ROOT)}")
         if content.count("```") % 2:
             fail(f"Unbalanced TMDL expression fence: {path.relative_to(ROOT)}")
+    semantic_definition = ROOT / "fabric" / "Property Assessment Model.SemanticModel" / "definition"
+    model_tmdl = (semantic_definition / "model.tmdl").read_text(encoding="utf-8")
+    if re.search(r"(?m)^\s*ref\s+(table|role)\b", model_tmdl):
+        fail("model.tmdl must not contain ref table/ref role declarations; folder serialization auto-discovers those objects.")
+    if (semantic_definition / "roles.tmdl").exists():
+        fail("TMDL folder serialization requires one file per role under definition/roles.")
+    role_paths = sorted((semantic_definition / "roles").glob("*.tmdl"))
+    if {path.stem for path in role_paths} != {"ResidentialReviewer", "CommercialReviewer"}:
+        fail("Semantic model must contain the two expected role files.")
+    table_columns = {}
+    for table_path in (semantic_definition / "tables").glob("*.tmdl"):
+        content = table_path.read_text(encoding="utf-8")
+        table_match = re.search(r"(?m)^table\s+'?([^'\r\n]+)'?\s*$", content)
+        if not table_match:
+            fail(f"Unable to parse table declaration in {table_path.name}")
+        table_name = table_match.group(1)
+        table_columns[table_name] = set(
+            re.findall(r"(?m)^\s*column\s+'?([^'\r\n]+)'?\s*$", content)
+        )
+    relationships = (semantic_definition / "relationships.tmdl").read_text(encoding="utf-8")
+    for table_name, column_name in re.findall(r"(?m)^\s*(?:fromColumn|toColumn):\s*([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)\s*$", relationships):
+        if table_name not in table_columns or column_name not in table_columns[table_name]:
+            fail(f"Relationship references unknown TMDL object {table_name}.{column_name}")
+    for role_path in role_paths:
+        content = role_path.read_text(encoding="utf-8")
+        if not re.search(r"(?m)^role\s+" + re.escape(role_path.stem) + r"\s*$", content):
+            fail(f"Role declaration does not match file name: {role_path.name}")
+        if not re.search(r"tablePermission\s+DimProperty\s*=\s*DimProperty\[PropertyClassCode\]", content):
+            fail(f"Role filter must use a qualified DimProperty column: {role_path.name}")
     report_definition = json.loads((ROOT / "fabric" / "Property Assessment Overview.Report" / "definition.pbir").read_text(encoding="utf-8"))
     if report_definition.get("version") != "4.0" or "datasetReference" not in report_definition:
         fail("PBIR definition is missing version 4.0 or datasetReference.")

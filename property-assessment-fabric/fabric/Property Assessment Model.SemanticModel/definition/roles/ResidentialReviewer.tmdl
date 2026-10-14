@@ -1,0 +1,5 @@
+role ResidentialReviewer
+	modelPermission: read
+
+	tablePermission DimProperty = DimProperty[PropertyClassCode] IN {"RES", "MUR"}
+

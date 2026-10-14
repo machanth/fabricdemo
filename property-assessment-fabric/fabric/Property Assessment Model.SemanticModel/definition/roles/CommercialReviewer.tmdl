@@ -1,0 +1,5 @@
+role CommercialReviewer
+	modelPermission: read
+
+	tablePermission DimProperty = DimProperty[PropertyClassCode] IN {"COM", "AGR"}
+
